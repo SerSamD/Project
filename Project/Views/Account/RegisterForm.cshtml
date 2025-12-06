@@ -1,0 +1,78 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@using Project.ViewModels
+@model RegisterViewModel
+
+@{
+    // Récupérer le titre défini dans l'action du contrôleur (RegisterStudent ou RegisterTeacher)
+    ViewData["Title"] = ViewData["Title"] ?? "Créer un Compte";
+
+    // Déterminer l'action POST en fonction de la route actuelle
+    string postAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h2>@ViewData["Title"]</h2>
+        <hr />
+
+        <form asp-controller="Account" asp-action="@postAction" method="post" class="needs-validation" novalidate>
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="NomUtilisateur" class="form-label"></label>
+                <input asp-for="NomUtilisateur" class="form-control" />
+                <span asp-validation-for="NomUtilisateur" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Prenom" class="form-label"></label>
+                <input asp-for="Prenom" class="form-control" />
+                <span asp-validation-for="Prenom" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Nom" class="form-label"></label>
+                <input asp-for="Nom" class="form-control" />
+                <span asp-validation-for="Nom" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="MotDePasse" class="form-label"></label>
+                <input asp-for="MotDePasse" class="form-control" />
+                <span asp-validation-for="MotDePasse" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ConfirmMotDePasse" class="form-label"></label>
+                <input asp-for="ConfirmMotDePasse" class="form-control" />
+                <span asp-validation-for="ConfirmMotDePasse" class="text-danger"></span>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Créer le compte</button>
+            </div>
+        </form>
+
+        <hr />
+
+        <div class="text-center">
+            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary">Annuler et choisir un autre rôle</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

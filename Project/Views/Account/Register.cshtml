@@ -1,0 +1,39 @@
+﻿@{
+    ViewData["Title"] = "Inscription";
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2 text-center">
+        <h2 class="mb-4">Créer un Compte</h2>
+        <p class="lead">Veuillez choisir le type de compte que vous souhaitez créer.</p>
+        <hr />
+
+        <div class="row mt-5">
+
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <h4 class="card-title">👨‍🎓 Compte Étudiant</h4>
+                        <p class="card-text">Inscrivez-vous pour accéder aux cours, voir vos notes et suivre votre progression.</p>
+                        <a asp-controller="Account" asp-action="RegisterStudent" class="btn btn-primary btn-lg mt-3">S'inscrire comme Étudiant</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <h4 class="card-title">🧑‍🏫 Compte Enseignant</h4>
+                        <p class="card-text">Créez un compte pour enseigner des cours, gérer les inscriptions et attribuer des notes.</p>
+                        <a asp-controller="Account" asp-action="RegisterTeacher" class="btn btn-outline-info btn-lg mt-3">S'inscrire comme Enseignant</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-4">
+            <a asp-controller="Account" asp-action="Login">Retour à la connexion</a>
+        </div>
+    </div>
+</div>

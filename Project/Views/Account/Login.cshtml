@@ -1,0 +1,46 @@
+﻿@using Project.ViewModels
+@model LoginViewModel
+
+@{
+    ViewData["Title"] = "Connexion";
+}
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h2>Connexion à la Plateforme</h2>
+        <hr />
+
+        <form asp-controller="Account" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="needs-validation" novalidate>
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="NomUtilisateur" class="form-label"></label>
+                <input asp-for="NomUtilisateur" class="form-control" />
+                <span asp-validation-for="NomUtilisateur" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="MotDePasse" class="form-label"></label>
+                <input asp-for="MotDePasse" class="form-control" />
+                <span asp-validation-for="MotDePasse" class="text-danger"></span>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Se connecter</button>
+            </div>
+        </form>
+
+        <hr />
+
+        <div class="text-center">
+            <p>Vous n'avez pas de compte ?</p>
+            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-success">Créer un compte</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
