@@ -33,7 +33,7 @@ public class AccountController : Controller
     }
 
     // ============================================================
-    // 1️⃣ CONNEXION (MIS À JOUR)
+    // 1️⃣ CONNEXION
     // ============================================================
 
     [HttpGet]
@@ -41,7 +41,7 @@ public class AccountController : Controller
     public IActionResult Login(string returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
-        ViewBag.Message = TempData["Message"]; // Pour les messages d'attente après inscription
+        ViewBag.Message = TempData["Message"];
         return View();
     }
 
@@ -59,7 +59,7 @@ public class AccountController : Controller
 
             string submittedPasswordHash;
 
-            // Logique de hachage temporaire : Admin (ID 1) utilise le mot de passe en clair "admin123"
+            // Logique de hachage temporaire pour l'Admin (ID 1)
             if (utilisateur != null && utilisateur.Id == 1 && utilisateur.MotDePasseHash == "admin123")
             {
                 submittedPasswordHash = "admin123";
@@ -72,7 +72,7 @@ public class AccountController : Controller
             // Vérification de l'existence et du mot de passe
             if (utilisateur != null && utilisateur.MotDePasseHash == submittedPasswordHash)
             {
-                // NOUVEAU : Vérifier si l'utilisateur est approuvé (sauf pour l'Admin)
+                // Vérifier si l'utilisateur est approuvé (sauf pour l'Admin)
                 if (utilisateur.Role != "Admin" && !utilisateur.IsApproved)
                 {
                     ModelState.AddModelError(string.Empty, "Votre compte est en attente d'approbation par un administrateur.");
@@ -91,7 +91,7 @@ public class AccountController : Controller
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var authProperties = new AuthenticationProperties
                 {
-                    IsPersistent = true
+                    IsPersistent = true // Garde le cookie actif entre les sessions
                 };
 
                 await HttpContext.SignInAsync(
@@ -99,7 +99,7 @@ public class AccountController : Controller
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
-                // NOUVELLE REDIRECTION: Basée sur le rôle
+                // REDIRECTION BASÉE SUR LE RÔLE
                 if (utilisateur.Role == "Admin")
                 {
                     return RedirectToAction("PendingUsers", "Admin");
@@ -113,8 +113,7 @@ public class AccountController : Controller
                     return RedirectToAction("Index", "Student");
                 }
 
-
-                // Redirection par défaut (pour les autres cas ou returnUrl)
+                // Redirection par défaut ou vers l'URL demandée
                 if (Url.IsLocalUrl(returnUrl))
                 {
                     return Redirect(returnUrl);
@@ -134,7 +133,7 @@ public class AccountController : Controller
     }
 
     // ============================================================
-    // 2️⃣ INSCRIPTION : CHOIX DU RÔLE (Inchangé)
+    // 2️⃣ INSCRIPTION : CHOIX DU RÔLE
     // ============================================================
 
     [HttpGet]
@@ -146,7 +145,7 @@ public class AccountController : Controller
     }
 
     // ============================================================
-    // 3️⃣ INSCRIPTION : ÉTUDIANT (MIS À JOUR - Ajout de Pending)
+    // 3️⃣ INSCRIPTION : ÉTUDIANT (Crée un compte en statut 'Pending')
     // ============================================================
 
     [HttpGet]
@@ -177,9 +176,9 @@ public class AccountController : Controller
                 {
                     NomUtilisateur = model.NomUtilisateur,
                     MotDePasseHash = HashPassword(model.MotDePasse),
-                    Role = "Pending", // Rôle temporaire
-                    IsApproved = false, // NON approuvé
-                    PendingRole = "Etudiant", // Rôle désiré après approbation
+                    Role = "Pending",
+                    IsApproved = false,
+                    PendingRole = "Etudiant",
                     Nom = model.Nom,
                     Prenom = model.Prenom,
                     Email = model.Email
@@ -221,7 +220,7 @@ public class AccountController : Controller
     }
 
     // ============================================================
-    // 4️⃣ INSCRIPTION : ENSEIGNANT (MIS À JOUR - Ajout de Pending)
+    // 4️⃣ INSCRIPTION : ENSEIGNANT (Crée un compte en statut 'Pending')
     // ============================================================
 
     [HttpGet]
@@ -252,9 +251,9 @@ public class AccountController : Controller
                 {
                     NomUtilisateur = model.NomUtilisateur,
                     MotDePasseHash = HashPassword(model.MotDePasse),
-                    Role = "Pending", // Rôle temporaire
-                    IsApproved = false, // NON approuvé
-                    PendingRole = "Enseignant", // Rôle désiré après approbation
+                    Role = "Pending",
+                    IsApproved = false,
+                    PendingRole = "Enseignant",
                     Nom = model.Nom,
                     Prenom = model.Prenom,
                     Email = model.Email
@@ -293,7 +292,7 @@ public class AccountController : Controller
     }
 
     // ============================================================
-    // 5️⃣ DÉCONNEXION & ACCÈS REFUSÉ (Inchangé)
+    // 5️⃣ DÉCONNEXION & ACCÈS REFUSÉ
     // ============================================================
 
     [HttpPost]

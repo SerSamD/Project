@@ -14,6 +14,7 @@ public class AdminController : Controller
     }
 
     // Affiche la liste des utilisateurs en attente
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> PendingUsers()
     {
         // Récupérer les utilisateurs non approuvés ou ceux avec le rôle Pending
