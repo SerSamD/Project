@@ -1,46 +1,64 @@
-﻿@using Project.ViewModels
-@model LoginViewModel
-
+﻿@model Project.ViewModels.LoginViewModel
 @{
     ViewData["Title"] = "Connexion";
 }
 
-<div class="row">
-    <div class="col-md-6 offset-md-3">
-        <h2>Connexion à la Plateforme</h2>
-        <hr />
+<style>
+    /* Force toute la page à occuper 100% de la hauteur */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Supprime le scroll */
+    }
+</style>
 
-        <form asp-controller="Account" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="needs-validation" novalidate>
-            <div asp-validation-summary="All" class="text-danger"></div>
+<!-- Conteneur centré sans scroll -->
+<div style="
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    width:100%;
+">
+    <div style="width:380px;">
 
-            <div class="mb-3">
-                <label asp-for="NomUtilisateur" class="form-label"></label>
+        <h2 class="text-center mb-4">Connexion à la Plateforme</h2>
+
+        <form asp-action="Login" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <!-- Nom d'utilisateur -->
+            <div class="form-group mb-3">
+                <label asp-for="NomUtilisateur"></label>
                 <input asp-for="NomUtilisateur" class="form-control" />
                 <span asp-validation-for="NomUtilisateur" class="text-danger"></span>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="MotDePasse" class="form-label"></label>
+            <!-- Mot de passe -->
+            <div class="form-group mb-3">
+                <label asp-for="MotDePasse"></label>
                 <input asp-for="MotDePasse" class="form-control" />
                 <span asp-validation-for="MotDePasse" class="text-danger"></span>
             </div>
 
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary">Se connecter</button>
+            <!-- Bouton Se connecter -->
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
             </div>
         </form>
 
         <hr />
 
-        <div class="text-center">
+        <!-- Lien de création de compte -->
+        <div class="text-center mt-3">
             <p>Vous n'avez pas de compte ?</p>
-            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-success">Créer un compte</a>
+            <a asp-action="Register" class="btn btn-outline-success">Créer un compte</a>
         </div>
+
     </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
 }

@@ -17,7 +17,7 @@ public class AccountController : Controller
         _context = context;
     }
 
-    // --- Helper pour le hachage (Simplifié pour l'exemple) ---
+    // --- Helper pour le hachage ---
     private string HashPassword(string password)
     {
         using (SHA256 sha256Hash = SHA256.Create())
@@ -33,7 +33,7 @@ public class AccountController : Controller
     }
 
     // ============================================================
-    // 1️⃣ CONNEXION
+    // 1️⃣ CONNEXION (MIS À JOUR)
     // ============================================================
 
     [HttpGet]
@@ -41,6 +41,7 @@ public class AccountController : Controller
     public IActionResult Login(string returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
+        ViewBag.Message = TempData["Message"]; // Pour les messages d'attente après inscription
         return View();
     }
 
@@ -65,13 +66,19 @@ public class AccountController : Controller
             }
             else
             {
-                // Hacher le mot de passe pour la comparaison (Utilisateurs non-Admin)
                 submittedPasswordHash = HashPassword(model.MotDePasse);
             }
 
             // Vérification de l'existence et du mot de passe
             if (utilisateur != null && utilisateur.MotDePasseHash == submittedPasswordHash)
             {
+                // NOUVEAU : Vérifier si l'utilisateur est approuvé (sauf pour l'Admin)
+                if (utilisateur.Role != "Admin" && !utilisateur.IsApproved)
+                {
+                    ModelState.AddModelError(string.Empty, "Votre compte est en attente d'approbation par un administrateur.");
+                    return View(model);
+                }
+
                 // Création du ticket d'authentification
                 var claims = new List<Claim>
                 {
@@ -92,7 +99,22 @@ public class AccountController : Controller
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
-                // Redirection
+                // NOUVELLE REDIRECTION: Basée sur le rôle
+                if (utilisateur.Role == "Admin")
+                {
+                    return RedirectToAction("PendingUsers", "Admin");
+                }
+                if (utilisateur.Role == "Enseignant")
+                {
+                    return RedirectToAction("Index", "Teacher");
+                }
+                if (utilisateur.Role == "Etudiant")
+                {
+                    return RedirectToAction("Index", "Student");
+                }
+
+
+                // Redirection par défaut (pour les autres cas ou returnUrl)
                 if (Url.IsLocalUrl(returnUrl))
                 {
                     return Redirect(returnUrl);
@@ -103,27 +125,28 @@ public class AccountController : Controller
                 }
             }
 
+            // ÉCHEC DE L'AUTHENTIFICATION
             ModelState.AddModelError(string.Empty, "Nom d'utilisateur ou mot de passe non valide.");
         }
 
+        // Si ModelState est invalide ou authentification a échoué
         return View(model);
     }
 
     // ============================================================
-    // 2️⃣ INSCRIPTION : CHOIX DU RÔLE
+    // 2️⃣ INSCRIPTION : CHOIX DU RÔLE (Inchangé)
     // ============================================================
 
     [HttpGet]
     [AllowAnonymous]
     public IActionResult Register()
     {
-        // Affiche la vue qui donne le choix entre Étudiant et Enseignant
         ViewData["Title"] = "Choisir le type de compte";
         return View();
     }
 
     // ============================================================
-    // 3️⃣ INSCRIPTION : ÉTUDIANT
+    // 3️⃣ INSCRIPTION : ÉTUDIANT (MIS À JOUR - Ajout de Pending)
     // ============================================================
 
     [HttpGet]
@@ -131,7 +154,6 @@ public class AccountController : Controller
     public IActionResult RegisterStudent()
     {
         ViewData["Title"] = "Créer un Compte Étudiant";
-        // Retourne la vue générique pour le formulaire
         return View("RegisterForm", new RegisterViewModel());
     }
 
@@ -142,7 +164,6 @@ public class AccountController : Controller
     {
         if (ModelState.IsValid)
         {
-            // Vérifier si le nom d'utilisateur existe déjà
             if (await _context.Utilisateurs.AnyAsync(u => u.NomUtilisateur == model.NomUtilisateur))
             {
                 ModelState.AddModelError("NomUtilisateur", "Ce nom d'utilisateur est déjà pris.");
@@ -151,12 +172,14 @@ public class AccountController : Controller
 
             try
             {
-                // 1. Créer l'objet Utilisateur (Rôle: Etudiant)
+                // 1. Créer l'objet Utilisateur AVEC STATUT PENDING
                 var nouvelUtilisateur = new Utilisateur
                 {
                     NomUtilisateur = model.NomUtilisateur,
                     MotDePasseHash = HashPassword(model.MotDePasse),
-                    Role = "Etudiant",
+                    Role = "Pending", // Rôle temporaire
+                    IsApproved = false, // NON approuvé
+                    PendingRole = "Etudiant", // Rôle désiré après approbation
                     Nom = model.Nom,
                     Prenom = model.Prenom,
                     Email = model.Email
@@ -165,7 +188,7 @@ public class AccountController : Controller
                 _context.Utilisateurs.Add(nouvelUtilisateur);
                 await _context.SaveChangesAsync();
 
-                // 2. Créer le profil Étudiant (Relation 1-à-1)
+                // 2. Créer le profil Étudiant
                 var nouvelEtudiant = new Etudiant
                 {
                     UtilisateurId = nouvelUtilisateur.Id,
@@ -177,25 +200,14 @@ public class AccountController : Controller
                 _context.Etudiants.Add(nouvelEtudiant);
                 await _context.SaveChangesAsync();
 
-                // 3. Connexion de l'utilisateur
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, nouvelUtilisateur.Id.ToString()),
-                    new Claim(ClaimTypes.Name, nouvelUtilisateur.NomUtilisateur),
-                    new Claim(ClaimTypes.Role, nouvelUtilisateur.Role),
-                    new Claim("NomComplet", $"{nouvelUtilisateur.Prenom} {nouvelUtilisateur.Nom}")
-                };
-
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
-
-                return RedirectToAction("Index", "Home");
+                // 3. Rediriger vers le Login avec un message d'attente
+                TempData["Message"] = "Votre compte Étudiant a été créé et est en attente d'approbation. Vous recevrez une notification lorsque votre compte sera activé.";
+                return RedirectToAction("Login");
             }
             catch (DbUpdateException ex)
             {
                 ModelState.AddModelError(string.Empty, "Erreur lors de l'enregistrement en base de données. Détails: " + ex.InnerException?.Message);
-                return View("RegisterForm", model); // Retourne au formulaire en cas d'erreur
+                return View("RegisterForm", model);
             }
             catch (Exception ex)
             {
@@ -209,7 +221,7 @@ public class AccountController : Controller
     }
 
     // ============================================================
-    // 4️⃣ INSCRIPTION : ENSEIGNANT (Logique à compléter)
+    // 4️⃣ INSCRIPTION : ENSEIGNANT (MIS À JOUR - Ajout de Pending)
     // ============================================================
 
     [HttpGet]
@@ -217,7 +229,6 @@ public class AccountController : Controller
     public IActionResult RegisterTeacher()
     {
         ViewData["Title"] = "Créer un Compte Enseignant";
-        // Retourne la vue générique pour le formulaire
         return View("RegisterForm", new RegisterViewModel());
     }
 
@@ -228,7 +239,6 @@ public class AccountController : Controller
     {
         if (ModelState.IsValid)
         {
-            // Vérifier si le nom d'utilisateur existe déjà
             if (await _context.Utilisateurs.AnyAsync(u => u.NomUtilisateur == model.NomUtilisateur))
             {
                 ModelState.AddModelError("NomUtilisateur", "Ce nom d'utilisateur est déjà pris.");
@@ -237,12 +247,14 @@ public class AccountController : Controller
 
             try
             {
-                // 1. Créer l'objet Utilisateur (Rôle: Enseignant)
+                // 1. Créer l'objet Utilisateur AVEC STATUT PENDING
                 var nouvelUtilisateur = new Utilisateur
                 {
                     NomUtilisateur = model.NomUtilisateur,
                     MotDePasseHash = HashPassword(model.MotDePasse),
-                    Role = "Enseignant",
+                    Role = "Pending", // Rôle temporaire
+                    IsApproved = false, // NON approuvé
+                    PendingRole = "Enseignant", // Rôle désiré après approbation
                     Nom = model.Nom,
                     Prenom = model.Prenom,
                     Email = model.Email
@@ -251,31 +263,18 @@ public class AccountController : Controller
                 _context.Utilisateurs.Add(nouvelUtilisateur);
                 await _context.SaveChangesAsync();
 
-                // 2. Créer le profil Enseignant (Relation 1-à-1)
+                // 2. Créer le profil Enseignant
                 var nouvelEnseignant = new Enseignant
                 {
                     UtilisateurId = nouvelUtilisateur.Id,
-                    // Si Enseignant a des champs spécifiques, les ajouter ici.
-                    // Pour l'instant, seul l'UtilisateurId est requis par votre modèle.
                 };
 
                 _context.Enseignants.Add(nouvelEnseignant);
                 await _context.SaveChangesAsync();
 
-                // 3. Connexion de l'utilisateur
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, nouvelUtilisateur.Id.ToString()),
-                    new Claim(ClaimTypes.Name, nouvelUtilisateur.NomUtilisateur),
-                    new Claim(ClaimTypes.Role, nouvelUtilisateur.Role),
-                    new Claim("NomComplet", $"{nouvelUtilisateur.Prenom} {nouvelUtilisateur.Nom}")
-                };
-
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
-
-                return RedirectToAction("Index", "Home");
+                // 3. Rediriger vers le Login avec un message d'attente
+                TempData["Message"] = "Votre compte Enseignant a été créé et est en attente d'approbation. Vous recevrez une notification lorsque votre compte sera activé.";
+                return RedirectToAction("Login");
             }
             catch (DbUpdateException ex)
             {
@@ -294,7 +293,7 @@ public class AccountController : Controller
     }
 
     // ============================================================
-    // 5️⃣ DÉCONNEXION & ACCÈS REFUSÉ
+    // 5️⃣ DÉCONNEXION & ACCÈS REFUSÉ (Inchangé)
     // ============================================================
 
     [HttpPost]

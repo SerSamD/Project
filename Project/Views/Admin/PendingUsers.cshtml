@@ -1,0 +1,71 @@
+﻿@model IEnumerable<Utilisateur>
+
+@{
+    ViewData["Title"] = "Utilisateurs en Attente d'Approbation";
+}
+
+<div class="container">
+    <h1>👑 Utilisateurs en Attente d'Approbation</h1>
+    <p>Gérez ici les comptes qui attendent une validation avant d'accéder à la plateforme.</p>
+    <hr />
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (Model.Any())
+    {
+        <table class="table table-hover table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nom d'utilisateur</th>
+                    <th>Nom Complet</th>
+                    <th>Email</th>
+                    <th>Rôle Demandé</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.Id</td>
+                        <td>@user.NomUtilisateur</td>
+                        <td>@user.Prenom @user.Nom</td>
+                        <td>@user.Email</td>
+                        <td><span class="badge bg-warning text-dark">@user.PendingRole</span></td>
+                        <td>
+                            <form asp-action="ApproveUser" asp-route-id="@user.Id" method="post" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-success"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir accepter l\'utilisateur @user.NomUtilisateur ?')">
+                                    Accepter
+                                </button>
+                            </form>
+
+                            <form asp-action="RejectUser" asp-route-id="@user.Id" method="post" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir rejeter et supprimer l\'utilisateur @user.NomUtilisateur ? Cette action est irréversible.')">
+                                    Rejeter
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill"></i> Aucun utilisateur en attente d'approbation.
+        </div>
+    }
+</div>
