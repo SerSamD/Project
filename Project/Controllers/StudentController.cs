@@ -2,6 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using System.Linq;
+using System;
+using System.Collections.Generic; // Nécessaire si vous utilisez List<T>
 
 // Seuls les utilisateurs avec le rôle "Etudiant" peuvent accéder à ce contrôleur
 [Authorize(Roles = "Etudiant")]
@@ -14,21 +18,31 @@ public class StudentController : Controller
         _context = context;
     }
 
+    // Fonction utilitaire pour obtenir l'ID de l'utilisateur
+    private bool TryGetUserId(out int userId)
+    {
+        return int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
+    }
+
+    // =========================================================================
+    // TABLEAU DE BORD (INDEX)
+    // =========================================================================
+
     // Vue principale de l'étudiant : Afficher le profil, les cours inscrits et les notes
     public async Task<IActionResult> Index()
     {
-        // 1. Récupérer l'ID de l'utilisateur connecté
-        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId))
+        if (!TryGetUserId(out int userId))
         {
             return Unauthorized();
         }
 
-        // 2. Récupérer le profil Etudiant et charger toutes les relations nécessaires (Inscriptions, Cours, Notes)
+        // 2. CORRECTION : AJOUTER .Include(e => e.Utilisateur) pour éviter l'erreur de référence nulle
         var etudiantProfile = await _context.Etudiants
+            .Include(e => e.Utilisateur) // <-- ESSENTIEL pour accéder au Nom, Prénom, Email, etc.
             .Include(e => e.Inscriptions)
-                .ThenInclude(i => i.Cours) // Inclure les détails du Cours via l'Inscription
+                .ThenInclude(i => i.Cours)
             .Include(e => e.Notes)
-                .ThenInclude(n => n.Cours) // Inclure les détails du Cours via la Note
+                .ThenInclude(n => n.Cours)
             .FirstOrDefaultAsync(e => e.UtilisateurId == userId);
 
         if (etudiantProfile == null)
@@ -36,13 +50,101 @@ public class StudentController : Controller
             return NotFound("Profil Étudiant introuvable.");
         }
 
-        // Utiliser ViewBag pour les informations du profil
-        ViewBag.NomComplet = $"{etudiantProfile.Prenom} {etudiantProfile.Nom}";
-        ViewBag.Email = etudiantProfile.Email;
+        // Utiliser les informations du profil chargé via Utilisateur
+        ViewBag.NomComplet = $"{etudiantProfile.Utilisateur.Prenom} {etudiantProfile.Utilisateur.Nom}";
+        ViewBag.Email = etudiantProfile.Utilisateur.Email;
 
         // Passer le profil complet à la vue
         return View(etudiantProfile);
     }
 
-    // --- Ajoutez ici d'autres actions si nécessaire (Ex: S'inscrire à un nouveau cours) ---
+    // =========================================================================
+    // COURS DISPONIBLES (AVAILABLECOURSES)
+    // =========================================================================
+
+    // GET: /Student/AvailableCourses
+    public async Task<IActionResult> AvailableCourses()
+    {
+        if (!TryGetUserId(out int userId))
+        {
+            return Unauthorized();
+        }
+
+        var etudiantProfile = await _context.Etudiants
+            .Include(e => e.Inscriptions)
+            .FirstOrDefaultAsync(e => e.UtilisateurId == userId);
+
+        if (etudiantProfile == null)
+        {
+            return NotFound("Profil Étudiant introuvable.");
+        }
+
+        // Récupérer l'ID des cours auxquels l'étudiant est déjà inscrit
+        var coursInscritsIds = etudiantProfile.Inscriptions
+                                                .Select(i => i.CoursId)
+                                                .ToList();
+
+        // Récupérer tous les cours qui ne sont pas inscrits, y compris l'enseignant (pour l'affichage)
+        var coursDisponibles = await _context.Cours
+            .Include(c => c.Enseignant).ThenInclude(e => e.Utilisateur)
+            .Where(c => !coursInscritsIds.Contains(c.Id))
+            .OrderBy(c => c.Titre)
+            .ToListAsync();
+
+        return View(coursDisponibles);
+    }
+
+    // =========================================================================
+    // INSCRIPTION (ENROLL)
+    // =========================================================================
+
+    // POST: /Student/Enroll
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Enroll(int coursId)
+    {
+        if (!TryGetUserId(out int userId))
+        {
+            return Unauthorized();
+        }
+
+        var etudiant = await _context.Etudiants.FirstOrDefaultAsync(e => e.UtilisateurId == userId);
+
+        if (etudiant == null)
+        {
+            TempData["Error"] = "Erreur: Profil étudiant non trouvé.";
+            return RedirectToAction("AvailableCourses");
+        }
+
+        // Vérifier si le cours existe et si l'étudiant n'est pas déjà inscrit
+        var coursExiste = await _context.Cours.AnyAsync(c => c.Id == coursId);
+        if (!coursExiste)
+        {
+            TempData["Error"] = "Le cours spécifié n'existe pas.";
+            return RedirectToAction("AvailableCourses");
+        }
+
+        var inscriptionExistante = await _context.Inscriptions
+            .AnyAsync(i => i.EtudiantId == etudiant.Id && i.CoursId == coursId);
+
+        if (inscriptionExistante)
+        {
+            TempData["Error"] = "Vous êtes déjà inscrit à ce cours.";
+            return RedirectToAction("AvailableCourses");
+        }
+
+        // Créer la nouvelle inscription
+        var nouvelleInscription = new Inscription
+        {
+            EtudiantId = etudiant.Id,
+            CoursId = coursId,
+            DateInscription = DateTime.Now
+        };
+
+        _context.Inscriptions.Add(nouvelleInscription);
+        await _context.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = "Inscription au cours réussie !";
+        return RedirectToAction("Index");
+    }
 }
