@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Cryptography;
 using System.Text;
 using Project.Models;
-
+using Project.Data;
 public class AccountController : Controller
 {
     private readonly SchoolContext _context;
@@ -85,7 +85,7 @@ public class AccountController : Controller
                 // REDIRECTION BASÉE SUR LE RÔLE
                 if (utilisateur.Role == "Admin")
                 {
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Index", "Admin"); 
                 }
                 if (utilisateur.Role == "Enseignant")
                 {
@@ -97,7 +97,7 @@ public class AccountController : Controller
                 }
                 if (utilisateur.Role == "Surveillant")
                 {
-                    return RedirectToAction("Index", "Supervisor");
+                    return RedirectToAction("Index", "Surveillant"); 
                 }
 
                 if (Url.IsLocalUrl(returnUrl)) { return Redirect(returnUrl); }
@@ -112,8 +112,8 @@ public class AccountController : Controller
     // 2️⃣ INSCRIPTION & DÉCONNEXION (Logique pour chaque rôle)
     // ============================================================
 
-    [HttpGet][AllowAnonymous] public IActionResult Register() { /* ... */ return View(); }
-    [HttpGet][AllowAnonymous] public IActionResult RegisterStudent() { /* ... */ return View("RegisterForm", new RegisterViewModel()); }
+    [HttpGet] [AllowAnonymous] public IActionResult Register() { /* ... */ return View(); }
+    [HttpGet] [AllowAnonymous] public IActionResult RegisterStudent() { /* ... */ return View("RegisterForm", new RegisterViewModel()); }
 
     [HttpPost]
     [AllowAnonymous]
@@ -131,14 +131,9 @@ public class AccountController : Controller
             // 1. Créer Utilisateur
             var nouvelUtilisateur = new Utilisateur
             {
-                NomUtilisateur = model.NomUtilisateur,
-                MotDePasseHash = HashPassword(model.MotDePasse),
-                Role = "Pending",
-                IsApproved = false,
-                PendingRole = "Etudiant",
-                Nom = model.Nom,
-                Prenom = model.Prenom,
-                Email = model.Email
+                NomUtilisateur = model.NomUtilisateur, MotDePasseHash = HashPassword(model.MotDePasse),
+                Role = "Pending", IsApproved = false, PendingRole = "Etudiant",
+                Nom = model.Nom, Prenom = model.Prenom, Email = model.Email
             };
             _context.Utilisateurs.Add(nouvelUtilisateur);
             await _context.SaveChangesAsync();
@@ -155,7 +150,7 @@ public class AccountController : Controller
         return View("RegisterForm", model);
     }
 
-    [HttpGet][AllowAnonymous] public IActionResult RegisterTeacher() { /* ... */ return View("RegisterForm", new RegisterViewModel()); }
+    [HttpGet] [AllowAnonymous] public IActionResult RegisterTeacher() { /* ... */ return View("RegisterForm", new RegisterViewModel()); }
 
     [HttpPost]
     [AllowAnonymous]
@@ -173,14 +168,9 @@ public class AccountController : Controller
             // 1. Créer Utilisateur
             var nouvelUtilisateur = new Utilisateur
             {
-                NomUtilisateur = model.NomUtilisateur,
-                MotDePasseHash = HashPassword(model.MotDePasse),
-                Role = "Pending",
-                IsApproved = false,
-                PendingRole = "Enseignant",
-                Nom = model.Nom,
-                Prenom = model.Prenom,
-                Email = model.Email
+                NomUtilisateur = model.NomUtilisateur, MotDePasseHash = HashPassword(model.MotDePasse),
+                Role = "Pending", IsApproved = false, PendingRole = "Enseignant",
+                Nom = model.Nom, Prenom = model.Prenom, Email = model.Email
             };
             _context.Utilisateurs.Add(nouvelUtilisateur);
             await _context.SaveChangesAsync();
@@ -196,7 +186,7 @@ public class AccountController : Controller
         return View("RegisterForm", model);
     }
 
-    [HttpGet][AllowAnonymous] public IActionResult RegisterSupervisor() { /* ... */ return View("RegisterForm", new RegisterViewModel()); }
+    [HttpGet] [AllowAnonymous] public IActionResult RegisterSupervisor() { /* ... */ return View("RegisterForm", new RegisterViewModel()); }
 
     [HttpPost]
     [AllowAnonymous]
@@ -214,14 +204,9 @@ public class AccountController : Controller
             // 1. Créer Utilisateur
             var nouvelUtilisateur = new Utilisateur
             {
-                NomUtilisateur = model.NomUtilisateur,
-                MotDePasseHash = HashPassword(model.MotDePasse),
-                Role = "Pending",
-                IsApproved = false,
-                PendingRole = "Surveillant",
-                Nom = model.Nom,
-                Prenom = model.Prenom,
-                Email = model.Email
+                NomUtilisateur = model.NomUtilisateur, MotDePasseHash = HashPassword(model.MotDePasse),
+                Role = "Pending", IsApproved = false, PendingRole = "Surveillant", 
+                Nom = model.Nom, Prenom = model.Prenom, Email = model.Email
             };
             _context.Utilisateurs.Add(nouvelUtilisateur);
             await _context.SaveChangesAsync();

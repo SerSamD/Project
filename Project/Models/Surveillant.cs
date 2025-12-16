@@ -16,5 +16,7 @@ namespace Project.Models
         public Utilisateur Utilisateur { get; set; }
 
         // Ajoutez ici toute propriété spécifique au Surveillant si nécessaire
+        public ICollection<Groupe> Groupes { get; set; } = new List<Groupe>();
+
     }
 }

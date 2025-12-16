@@ -1,4 +1,6 @@
-﻿public class Cours
+﻿using Project.Models;
+
+public class Cours
 {
     public int Id { get; set; }
     public string Titre { get; set; }
@@ -9,6 +11,11 @@
     public Enseignant Enseignant { get; set; }
 
     // Relations 1-à-N vers les tables de jonction
-    public List<Inscription> Inscriptions { get; set; } = new List<Inscription>();
-    public List<Note> Notes { get; set; } = new List<Note>(); 
+   
+   
+   
+
+    public ICollection<EmploiDuTemps> EmploisDuTemps { get; set; }
+    
+    public ICollection<Note> Notes { get; set; }
 }

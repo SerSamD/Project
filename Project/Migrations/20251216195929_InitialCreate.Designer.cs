@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-
+using Project.Data;
 #nullable disable
 
 namespace Project.Migrations
 {
     [DbContext(typeof(SchoolContext))]
-    [Migration("20251207120514_AddApprovalFieldsToUser")]
-    partial class AddApprovalFieldsToUser
+    [Migration("20251216195929_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -69,7 +69,44 @@ namespace Project.Migrations
                     b.ToTable("Enseignants");
                 });
 
-            modelBuilder.Entity("Etudiant", b =>
+            modelBuilder.Entity("Project.Models.EmploiDuTemps", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CoursId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EnseignantId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GroupeId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("HeureDebut")
+                        .HasColumnType("time(6)");
+
+                    b.Property<TimeSpan>("HeureFin")
+                        .HasColumnType("time(6)");
+
+                    b.Property<int>("Jour")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CoursId");
+
+                    b.HasIndex("EnseignantId");
+
+                    b.HasIndex("GroupeId");
+
+                    b.ToTable("EmploisDuTemps");
+                });
+
+            modelBuilder.Entity("Project.Models.Etudiant", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -80,6 +117,9 @@ namespace Project.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("GroupeId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Nom")
                         .IsRequired()
@@ -94,13 +134,15 @@ namespace Project.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GroupeId");
+
                     b.HasIndex("UtilisateurId")
                         .IsUnique();
 
                     b.ToTable("Etudiants");
                 });
 
-            modelBuilder.Entity("Inscription", b =>
+            modelBuilder.Entity("Project.Models.Groupe", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -108,25 +150,22 @@ namespace Project.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CoursId")
-                        .HasColumnType("int");
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
-                    b.Property<DateTime>("DateInscription")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("EtudiantId")
+                    b.Property<int>("SurveillantId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CoursId");
+                    b.HasIndex("SurveillantId");
 
-                    b.HasIndex("EtudiantId");
-
-                    b.ToTable("Inscriptions");
+                    b.ToTable("Groupes");
                 });
 
-            modelBuilder.Entity("Note", b =>
+            modelBuilder.Entity("Project.Models.Note", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -148,7 +187,7 @@ namespace Project.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<decimal>("Valeur")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(5, 2)");
 
                     b.HasKey("Id");
 
@@ -159,7 +198,26 @@ namespace Project.Migrations
                     b.ToTable("Notes");
                 });
 
-            modelBuilder.Entity("Utilisateur", b =>
+            modelBuilder.Entity("Project.Models.Surveillant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("UtilisateurId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UtilisateurId")
+                        .IsUnique();
+
+                    b.ToTable("Surveillants");
+                });
+
+            modelBuilder.Entity("Project.Models.Utilisateur", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -168,7 +226,6 @@ namespace Project.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<bool>("IsApproved")
@@ -187,7 +244,6 @@ namespace Project.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("PendingRole")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Prenom")
@@ -207,11 +263,11 @@ namespace Project.Migrations
                         {
                             Id = 1,
                             Email = "admin@ecole.com",
-                            IsApproved = false,
+                            IsApproved = true,
                             MotDePasseHash = "admin123",
                             Nom = "Système",
                             NomUtilisateur = "admin",
-                            PendingRole = "",
+                            PendingRole = "Admin",
                             Prenom = "Administrateur",
                             Role = "Admin"
                         });
@@ -230,7 +286,7 @@ namespace Project.Migrations
 
             modelBuilder.Entity("Enseignant", b =>
                 {
-                    b.HasOne("Utilisateur", "Utilisateur")
+                    b.HasOne("Project.Models.Utilisateur", "Utilisateur")
                         .WithOne("EnseignantProfil")
                         .HasForeignKey("Enseignant", "UtilisateurId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -239,37 +295,62 @@ namespace Project.Migrations
                     b.Navigation("Utilisateur");
                 });
 
-            modelBuilder.Entity("Etudiant", b =>
-                {
-                    b.HasOne("Utilisateur", "Utilisateur")
-                        .WithOne("EtudiantProfil")
-                        .HasForeignKey("Etudiant", "UtilisateurId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Utilisateur");
-                });
-
-            modelBuilder.Entity("Inscription", b =>
+            modelBuilder.Entity("Project.Models.EmploiDuTemps", b =>
                 {
                     b.HasOne("Cours", "Cours")
-                        .WithMany("Inscriptions")
+                        .WithMany("EmploisDuTemps")
                         .HasForeignKey("CoursId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Etudiant", "Etudiant")
-                        .WithMany("Inscriptions")
-                        .HasForeignKey("EtudiantId")
+                    b.HasOne("Enseignant", "Enseignant")
+                        .WithMany()
+                        .HasForeignKey("EnseignantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Project.Models.Groupe", "Groupe")
+                        .WithMany("SessionsEmploiDuTemps")
+                        .HasForeignKey("GroupeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Cours");
 
-                    b.Navigation("Etudiant");
+                    b.Navigation("Enseignant");
+
+                    b.Navigation("Groupe");
                 });
 
-            modelBuilder.Entity("Note", b =>
+            modelBuilder.Entity("Project.Models.Etudiant", b =>
+                {
+                    b.HasOne("Project.Models.Groupe", "Groupe")
+                        .WithMany("Etudiants")
+                        .HasForeignKey("GroupeId");
+
+                    b.HasOne("Project.Models.Utilisateur", "Utilisateur")
+                        .WithOne("EtudiantProfil")
+                        .HasForeignKey("Project.Models.Etudiant", "UtilisateurId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Groupe");
+
+                    b.Navigation("Utilisateur");
+                });
+
+            modelBuilder.Entity("Project.Models.Groupe", b =>
+                {
+                    b.HasOne("Project.Models.Surveillant", "Surveillant")
+                        .WithMany("Groupes")
+                        .HasForeignKey("SurveillantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Surveillant");
+                });
+
+            modelBuilder.Entity("Project.Models.Note", b =>
                 {
                     b.HasOne("Cours", "Cours")
                         .WithMany("Notes")
@@ -277,7 +358,7 @@ namespace Project.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Etudiant", "Etudiant")
+                    b.HasOne("Project.Models.Etudiant", "Etudiant")
                         .WithMany("Notes")
                         .HasForeignKey("EtudiantId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -288,9 +369,20 @@ namespace Project.Migrations
                     b.Navigation("Etudiant");
                 });
 
+            modelBuilder.Entity("Project.Models.Surveillant", b =>
+                {
+                    b.HasOne("Project.Models.Utilisateur", "Utilisateur")
+                        .WithOne("SurveillantProfil")
+                        .HasForeignKey("Project.Models.Surveillant", "UtilisateurId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Utilisateur");
+                });
+
             modelBuilder.Entity("Cours", b =>
                 {
-                    b.Navigation("Inscriptions");
+                    b.Navigation("EmploisDuTemps");
 
                     b.Navigation("Notes");
                 });
@@ -300,19 +392,32 @@ namespace Project.Migrations
                     b.Navigation("Cours");
                 });
 
-            modelBuilder.Entity("Etudiant", b =>
+            modelBuilder.Entity("Project.Models.Etudiant", b =>
                 {
-                    b.Navigation("Inscriptions");
-
                     b.Navigation("Notes");
                 });
 
-            modelBuilder.Entity("Utilisateur", b =>
+            modelBuilder.Entity("Project.Models.Groupe", b =>
+                {
+                    b.Navigation("Etudiants");
+
+                    b.Navigation("SessionsEmploiDuTemps");
+                });
+
+            modelBuilder.Entity("Project.Models.Surveillant", b =>
+                {
+                    b.Navigation("Groupes");
+                });
+
+            modelBuilder.Entity("Project.Models.Utilisateur", b =>
                 {
                     b.Navigation("EnseignantProfil")
                         .IsRequired();
 
                     b.Navigation("EtudiantProfil")
+                        .IsRequired();
+
+                    b.Navigation("SurveillantProfil")
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

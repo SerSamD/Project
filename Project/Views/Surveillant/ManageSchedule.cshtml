@@ -1,0 +1,168 @@
+﻿@using Project.Models
+@using System.Globalization
+@model Project.ViewModels.AddScheduleViewModel
+
+@{
+    ViewData["Title"] = "Gérer l'Emploi du Temps";
+    var schedule = ViewBag.Schedule as List<EmploiDuTemps>;
+    var selectedGroupId = (int?)ViewBag.SelectedGroupId;
+    var selectedGroupName = ViewBag.SelectedGroupName as string;
+
+    // Définition des jours pour la grille (Lundi à Vendredi)
+    var days = Enum.GetValues(typeof(DayOfWeek))
+        .Cast<DayOfWeek>()
+        .Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)
+        .OrderBy(d => (int)d)
+        .ToList();
+
+    // Plage horaire de l'école
+    var startHour = 8;
+    var endHour = 18;
+}
+
+<h1>Gérer l'Emploi du Temps</h1>
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+}
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+}
+
+<div class="card mb-4 shadow">
+    <div class="card-header bg-secondary text-white">Sélectionner un Groupe</div>
+    <div class="card-body">
+        <form asp-action="ManageSchedule" method="get">
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Choisir le Groupe :</label>
+                    <select name="groupId" class="form-control" onchange="this.form.submit()">
+                        <option value="">-- Sélectionnez un Groupe --</option>
+                        @foreach (var group in Model.Groupes)
+                        {
+                            <option value="@group.Value" selected="@(group.Value == selectedGroupId?.ToString())">
+                                @group.Text
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (selectedGroupId.HasValue)
+{
+    <h2 class="mt-4">Emploi du Temps pour: <span class="badge bg-primary">@selectedGroupName</span></h2>
+
+    <div class="card mb-5 shadow">
+        <div class="card-header bg-success text-white">Ajouter une Nouvelle Session</div>
+        <div class="card-body">
+            <form asp-action="AddSession" method="post">
+                <input type="hidden" asp-for="GroupeId" value="@selectedGroupId" />
+
+                <div class="row">
+
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="CoursId" class="form-label"></label>
+                        <select asp-for="CoursId" class="form-control" asp-items="Model.CoursList">
+                            <option value="">Choisir la matière</option>
+                        </select>
+                        <span asp-validation-for="CoursId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="EnseignantId" class="form-label"></label>
+                        <select asp-for="EnseignantId" class="form-control" asp-items="Model.Enseignants">
+                            <option value="">Choisir l'enseignant</option>
+                        </select>
+                        <span asp-validation-for="EnseignantId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="Jour" class="form-label"></label>
+                        <select asp-for="Jour" class="form-control" asp-items="Model.Jours"></select>
+                        <span asp-validation-for="Jour" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100">Ajouter la Session</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="HeureDebut" class="form-label"></label>
+                        <input asp-for="HeureDebut" type="time" class="form-control" />
+                        <span asp-validation-for="HeureDebut" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="HeureFin" class="form-label"></label>
+                        <input asp-for="HeureFin" type="time" class="form-control" />
+                        <span asp-validation-for="HeureFin" class="text-danger small"></span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered text-center align-middle schedule-table">
+            <thead>
+                <tr class="table-primary">
+                    <th>Heure</th>
+                    @foreach (var day in days)
+                    {
+                        <th>@day.ToString()</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (int hour = startHour; hour < endHour; hour++)
+                {
+                    <tr>
+                        <th scope="row" class="bg-light">@hour:00 - @(hour + 1):00</th>
+                        @foreach (var day in days)
+                        {
+                            <td>
+                                @{
+                                    // Trouver toutes les sessions qui chevauchent l'heure courante (ex: 8h00 - 9h00)
+                                    var sessionsInHour = schedule?.Where(s =>
+                                    s.Jour == day &&
+                                    s.HeureDebut.Hours <= hour &&
+                                    s.HeureFin.Hours > hour).ToList();
+                                }
+                                @if (sessionsInHour != null && sessionsInHour.Any())
+                                {
+                                    @foreach (var session in sessionsInHour)
+                                    {
+                                        <div class="schedule-entry bg-info text-white p-2 rounded mb-1 shadow-sm">
+                                            <strong class="d-block">@session.Cours.Titre</strong>
+                                            <span class="small">@session.Enseignant.Utilisateur.Nom</span>
+                                            <span class="d-block small">(@session.HeureDebut.ToString(@"hh\:mm") - @session.HeureFin.ToString(@"hh\:mm"))</span>
+                                            @* TODO: Ajoutez ici un lien pour supprimer la session *@
+                                        </div>
+                                    }
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+}
+else
+{
+    <div class="alert alert-info mt-4">Veuillez sélectionner un groupe ci-dessus pour gérer son emploi du temps.</div>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

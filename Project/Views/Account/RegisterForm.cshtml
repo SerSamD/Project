@@ -1,73 +1,90 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-@using Project.ViewModels
+﻿@using Project.ViewModels
 @model RegisterViewModel
 
 @{
-    // Récupérer le titre défini dans l'action du contrôleur (RegisterStudent ou RegisterTeacher)
+    // 1. Récupération de l'action actuelle (RegisterStudent ou RegisterTeacher)
+    string currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    // 2. Définition du titre par défaut si non fourni
     ViewData["Title"] = ViewData["Title"] ?? "Créer un Compte";
 
-    // Déterminer l'action POST en fonction de la route actuelle
-    string postAction = ViewContext.RouteData.Values["action"]?.ToString();
+    // 3. Logique d'adaptation du Design (Couleurs et Icônes)
+    bool isTeacher = currentAction == "RegisterTeacher";
+
+    // Si c'est un prof : Vert (success), sinon Bleu (primary)
+    string themeColor = isTeacher ? "success" : "primary";
+
+    // Choix de l'icône
+    string iconClass = isTeacher ? "fa-chalkboard-teacher" : "fa-user-graduate";
 }
 
-<div class="row">
-    <div class="col-md-6 offset-md-3">
-        <h2>@ViewData["Title"]</h2>
-        <hr />
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
 
-        <form asp-controller="Account" asp-action="@postAction" method="post" class="needs-validation" novalidate>
-            <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-5">
 
-            <div class="mb-3">
-                <label asp-for="NomUtilisateur" class="form-label"></label>
-                <input asp-for="NomUtilisateur" class="form-control" />
-                <span asp-validation-for="NomUtilisateur" class="text-danger"></span>
+                <div class="text-center mb-4">
+                    <div class="bg-@themeColor text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                        <i class="fas @iconClass fa-2x"></i>
+                    </div>
+                    <h2 class="fw-bold text-dark">@ViewData["Title"]</h2>
+                    <p class="text-muted">Veuillez remplir les informations ci-dessous.</p>
+                </div>
+
+                <form asp-controller="Account" asp-action="@currentAction" method="post" class="needs-validation" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="NomUtilisateur" class="form-label fw-bold small text-secondary">Nom d'utilisateur</label>
+                        <input asp-for="NomUtilisateur" class="form-control form-control-lg bg-light border-0" placeholder="Ex: user123" />
+                        <span asp-validation-for="NomUtilisateur" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Prenom" class="form-label fw-bold small text-secondary">Prénom</label>
+                            <input asp-for="Prenom" class="form-control form-control-lg bg-light border-0" />
+                            <span asp-validation-for="Prenom" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Nom" class="form-label fw-bold small text-secondary">Nom</label>
+                            <input asp-for="Nom" class="form-control form-control-lg bg-light border-0" />
+                            <span asp-validation-for="Nom" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-bold small text-secondary">Email</label>
+                        <input asp-for="Email" type="email" class="form-control form-control-lg bg-light border-0" placeholder="exemple@ecole.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="MotDePasse" class="form-label fw-bold small text-secondary">Mot de passe</label>
+                        <input asp-for="MotDePasse" type="password" class="form-control form-control-lg bg-light border-0" />
+                        <span asp-validation-for="MotDePasse" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ConfirmMotDePasse" class="form-label fw-bold small text-secondary">Confirmer le mot de passe</label>
+                        <input asp-for="ConfirmMotDePasse" type="password" class="form-control form-control-lg bg-light border-0" />
+                        <span asp-validation-for="ConfirmMotDePasse" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-@themeColor btn-lg fw-bold shadow-sm transition-hover">
+                            Créer le compte
+                        </button>
+
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary mt-2 border-0">
+                            <i class="fas fa-arrow-left me-1"></i> Changer de rôle
+                        </a>
+                    </div>
+                </form>
             </div>
-
-            <div class="mb-3">
-                <label asp-for="Prenom" class="form-label"></label>
-                <input asp-for="Prenom" class="form-control" />
-                <span asp-validation-for="Prenom" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Nom" class="form-label"></label>
-                <input asp-for="Nom" class="form-control" />
-                <span asp-validation-for="Nom" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="MotDePasse" class="form-label"></label>
-                <input asp-for="MotDePasse" class="form-control" />
-                <span asp-validation-for="MotDePasse" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="ConfirmMotDePasse" class="form-label"></label>
-                <input asp-for="ConfirmMotDePasse" class="form-control" />
-                <span asp-validation-for="ConfirmMotDePasse" class="text-danger"></span>
-            </div>
-
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary">Créer le compte</button>
-            </div>
-        </form>
-
-        <hr />
-
-        <div class="text-center">
-            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary">Annuler et choisir un autre rôle</a>
         </div>
+
     </div>
 </div>
 

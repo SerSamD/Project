@@ -1,16 +1,23 @@
-﻿using Project.Models;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
-public class Etudiant
+namespace Project.Models
 {
-    public int Id { get; set; }
-    public string Nom { get; set; } // Retirer ces champs si vous utilisez Utilisateur pour l'identité
-    public string Prenom { get; set; }
-    public string Email { get; set; }
+    public class Etudiant
+    {
+        public int Id { get; set; }
+        public string Nom { get; set; }
+        public string Prenom { get; set; }
+        public string Email { get; set; }
 
-    // Relation 1-à-1 vers Utilisateur (Si vous l'avez implémentée)
-    public int UtilisateurId { get; set; }
-    public Utilisateur Utilisateur { get; set; }
+        public int UtilisateurId { get; set; }
+        public Utilisateur Utilisateur { get; set; }
 
-    public List<Inscription> Inscriptions { get; set; } = new List<Inscription>();
-    public List<Note> Notes { get; set; } = new List<Note>();
+        // Clé étrangère vers le Groupe
+        public int? GroupeId { get; set; }
+        public Groupe? Groupe { get; set; }
+
+        public ICollection<Note> Notes { get; set; }
+    
+    }
 }

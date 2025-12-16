@@ -1,139 +1,61 @@
-﻿@* Suppression de Layout = null pour que ce fichier soit le Layout principal *@
-
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="fr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - MonSite</title>
+    <title>@ViewData["Title"] - MonApplication</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon" />
 
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-..." crossorigin="anonymous">
 
-        /* Conteneur principal pour toutes les pages */
-        .page-container {
-            width: 100%;
-            max-width: 1200px;
-            margin: auto;
-            padding: 20px;
-            flex-grow: 1;
-        }
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-        /* Ajustement automatique des images, tables, formulaires */
-        img, table, .form-control, .container, .row, .col {
-            max-width: 100%;
-        }
-
-        /* Forcer le texte et les blocs à ne pas dépasser */
-        * {
-            box-sizing: border-box;
-        }
-
-        /* Header de la barre de navigation */
-        header {
-            background: #0d6efd;
-            color: white;
-            margin-bottom: 20px;
-            flex-shrink: 0;
-            width: 100%;
-        }
-
-        /* Pied de page collé au bas */
-        footer {
-            margin-top: auto;
-            padding: 20px;
-            background: #f1f1f1;
-            text-align: center;
-            flex-shrink: 0;
-            width: 100%;
-        }
-    </style>
-
-    @RenderSection("Styles", required: false)
+    <!-- Styles spécifiques -->
+    <link rel="stylesheet" href="~/css/site.css" />
 </head>
-
 <body>
-
     <header>
-        <nav class="navbar navbar-expand-sm navbar-dark bg-primary">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MonSite</a>
-
-                @* Ajout du bouton d'activation du menu pour le responsive *@
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm mb-4">
+            <div class="container">
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">MonApplication</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                @* Conteneur du menu (ajustement de la classe pour le responsive) *@
-                <div class="collapse navbar-collapse" id="navbarNav">
-
-                    <ul class="navbar-nav flex-grow-1">
-
-                        @* =============================================== *@
-                        @* NOUVEAU : LIENS DE NAVIGATION ADMIN *@
-                        @* =============================================== *@
-                        @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-white" asp-controller="Admin" asp-action="Index">Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-warning" asp-controller="Admin" asp-action="PendingUsers">Approbations</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-info" asp-controller="Admin" asp-action="CreateUser">Créer Utilisateur</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-danger" asp-controller="Admin" asp-action="UsersList">Gérer Comptes</a>
-                            </li>
-                        }
-                        @* =============================================== *@
-                    </ul>
-
-                    @* Liens d'utilisateur (alignés à droite) *@
-                    <ul class="navbar-nav">
-                        @if (User.Identity.IsAuthenticated)
-                        {
-                            <li class="nav-item">
-                                <span class="nav-link text-white">Bienvenue, <strong>@User.Identity.Name</strong>!</span>
-                            </li>
-                            <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="form-inline">
-                                    <button type="submit" class="nav-link btn btn-link text-white">
-                                        Déconnexion
-                                    </button>
-                                </form>
-                            </li>
-                        }
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Accueil</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Login">Connexion</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Register">Inscription</a>
+                        </li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
 
-
-    <div class="page-container">
+    <main class="container">
         @RenderBody()
-    </div>
+    </main>
 
-
-    <footer>
-        <p>&copy; @DateTime.Now.Year - MonSite. Tous droits réservés.</p>
+    <footer class="bg-light text-center text-muted py-3 mt-4 shadow-sm">
+        &copy; @DateTime.Now.Year - MonApplication
     </footer>
 
+    <!-- Scripts JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
+    <!-- Section Scripts pour chaque vue -->
     @RenderSection("Scripts", required: false)
-
 </body>
 </html>

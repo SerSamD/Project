@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-// TRÈS IMPORTANT : Assurez-vous que ce namespace correspond au nom exact de votre projet !
 using Project.Models;
 
+namespace Project.Data;
 public class SchoolContext : DbContext
 {
     public SchoolContext(DbContextOptions<SchoolContext> options) : base(options)
@@ -15,9 +15,13 @@ public class SchoolContext : DbContext
     public DbSet<Enseignant> Enseignants { get; set; }
     public DbSet<Etudiant> Etudiants { get; set; }
     public DbSet<Cours> Cours { get; set; }
-    public DbSet<Inscription> Inscriptions { get; set; }
+
     public DbSet<Note> Notes { get; set; }
-    public DbSet<Surveillant> Surveillants { get; set; } // DbSet pour Surveillant
+    public DbSet<Surveillant> Surveillants { get; set; }
+    public DbSet<Groupe> Groupes { get; set; }
+
+    // ✅ CORRECTION 1 : Le nom exact utilisé dans SurveillantController est 'EmploisDuTemps'
+    public DbSet<EmploiDuTemps> EmploisDuTemps { get; set; }
 
 
     // ============================================================
@@ -52,7 +56,6 @@ public class SchoolContext : DbContext
         // 3️⃣ RELATION UN-À-UN ENTRE UTILISATEUR ET SURVEILLANT
         modelBuilder.Entity<Surveillant>()
             .HasOne(s => s.Utilisateur)
-            // Propriété de navigation dans Utilisateur.cs
             .WithOne(u => u.SurveillantProfil)
             .HasForeignKey<Surveillant>(s => s.UtilisateurId)
             .IsRequired();
@@ -74,18 +77,28 @@ public class SchoolContext : DbContext
             .HasForeignKey(n => n.CoursId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // 5️⃣ RELATION INSCRIPTION : Etudiant / Cours (N-à-N via Entité Jonction)
-        modelBuilder.Entity<Inscription>()
-            .HasOne(i => i.Etudiant)
-            .WithMany(e => e.Inscriptions)
-            .HasForeignKey(i => i.EtudiantId)
-            .OnDelete(DeleteBehavior.Cascade);
+     
 
-        modelBuilder.Entity<Inscription>()
-            .HasOne(i => i.Cours)
-            .WithMany(c => c.Inscriptions)
-            .HasForeignKey(i => i.CoursId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // Groupe <--> Surveillant (1-à-N)
+        modelBuilder.Entity<Groupe>()
+            .HasOne(g => g.Surveillant)
+            .WithMany(s => s.Groupes)
+            .HasForeignKey(g => g.SurveillantId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Etudiant <--> Groupe (N-à-1)
+        modelBuilder.Entity<Etudiant>()
+            .HasOne(e => e.Groupe)
+            .WithMany(g => g.Etudiants)
+            .HasForeignKey(e => e.GroupeId)
+            .IsRequired(false);
+
+        // SessionEmploiDuTemps <--> Groupe (N-à-1)
+        modelBuilder.Entity<EmploiDuTemps>()
+            .HasOne(s => s.Groupe)
+            .WithMany(g => g.SessionsEmploiDuTemps) 
+            .HasForeignKey(s => s.GroupeId)
+            .OnDelete(DeleteBehavior.Cascade); ;
 
         // 6️⃣ SEED DATA : Utilisateur Admin
         modelBuilder.Entity<Utilisateur>().HasData(
@@ -98,8 +111,6 @@ public class SchoolContext : DbContext
                 Nom = "Système",
                 Prenom = "Administrateur",
                 Email = "admin@ecole.com",
-
-                // Champs pour l'approbation (nécessaire pour le seed)
                 IsApproved = true,
                 PendingRole = "Admin"
             }

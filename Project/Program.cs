@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection; 
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Project.Models;
-
+using Project.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

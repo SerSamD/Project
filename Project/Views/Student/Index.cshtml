@@ -1,101 +1,66 @@
-﻿@model Etudiant // Votre modèle de classe Etudiant
+﻿@model Project.Models.Etudiant
 @{
     ViewData["Title"] = "Tableau de Bord Étudiant";
+    var nomComplet = ViewBag.NomComplet as string ?? "Étudiant";
 }
 
 <div class="container mt-4">
 
-    <h2>Bienvenue, @ViewBag.NomComplet !</h2>
-    <p>Ceci est votre tableau de bord étudiant. Vous trouverez ci-dessous votre profil, vos cours inscrits et vos notes.</p>
+    <h2>Bienvenue, @nomComplet !</h2>
+    <p>Ceci est votre tableau de bord étudiant. Vous trouverez ci-dessous votre profil et vos résultats.</p>
     <hr />
 
     <div class="mb-4 text-end">
-        <a asp-controller="Student" asp-action="AvailableCourses" class="btn btn-success">
-            <i class="fas fa-plus-circle"></i> S'inscrire à un nouveau cours
+        <a asp-controller="Student" asp-action="AvailableCourses" class="btn btn-primary">
+            <i class="fas fa-list"></i> Voir les Cours Disponibles
         </a>
     </div>
 
     <ul class="nav nav-tabs" id="studentDashboardTab" role="tablist">
-
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-content" type="button" role="tab" aria-controls="profile-content" aria-selected="true">
                 <i class="fas fa-user"></i> Votre Profil
             </button>
         </li>
-
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses-content" type="button" role="tab" aria-controls="courses-content" aria-selected="false">
-                <i class="fas fa-book"></i> Cours Inscrits (@Model.Inscriptions.Count)
-            </button>
-        </li>
-
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="grades-tab" data-bs-toggle="tab" data-bs-target="#grades-content" type="button" role="tab" aria-controls="grades-content" aria-selected="false">
-                <i class="fas fa-medal"></i> Vos Notes (@Model.Notes.Count)
+                <i class="fas fa-medal"></i> Vos Notes (@(Model.Notes?.Count ?? 0))
             </button>
         </li>
     </ul>
 
     <div class="tab-content pt-3" id="studentDashboardTabContent">
 
+        <!-- Profil Étudiant -->
         <div class="tab-pane fade show active" id="profile-content" role="tabpanel" aria-labelledby="profile-tab">
             <h3>Profil Personnel</h3>
-            <div class="card card-body">
-                <dl class="row">
+            <div class="card card-body shadow-sm">
+                <dl class="row mb-0">
                     <dt class="col-sm-3">Nom Complet :</dt>
-                    <dd class="col-sm-9">@ViewBag.NomComplet</dd>
+                    <dd class="col-sm-9">@nomComplet</dd>
 
                     <dt class="col-sm-3">Nom d'utilisateur :</dt>
-                    <dd class="col-sm-9">@Model.Utilisateur.NomUtilisateur</dd>
+                    <dd class="col-sm-9">@Model.Utilisateur?.NomUtilisateur</dd>
 
                     <dt class="col-sm-3">Email :</dt>
-                    <dd class="col-sm-9">@ViewBag.Email</dd>
+                    <dd class="col-sm-9">@Model.Utilisateur?.Email</dd>
 
                     <dt class="col-sm-3">Statut :</dt>
-                    <dd class="col-sm-9">Étudiant</dd>
+                    <dd class="col-sm-9">
+                        <span class="badge bg-info text-dark">Étudiant</span>
+                    </dd>
                 </dl>
             </div>
         </div>
 
-        <div class="tab-pane fade" id="courses-content" role="tabpanel" aria-labelledby="courses-tab">
-            <h3>Liste des Cours Inscrits</h3>
-            @if (Model.Inscriptions.Any())
-            {
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Cours</th>
-                            <th>Description</th>
-                            <th>Date d'Inscription</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var inscription in Model.Inscriptions.OrderBy(i => i.Cours.Titre))
-                        {
-                            <tr>
-                                <td>**@inscription.Cours.Titre**</td>
-                                <td>@inscription.Cours.Description</td>
-                                <td>@inscription.DateInscription.ToShortDateString()</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <div class="alert alert-warning">
-                    Vous n'êtes inscrit à aucun cours pour le moment.
-                    <a asp-action="AvailableCourses">Cliquez ici pour vous inscrire.</a>
-                </div>
-            }
-        </div>
-
+        <!-- Notes Étudiant -->
         <div class="tab-pane fade" id="grades-content" role="tabpanel" aria-labelledby="grades-tab">
             <h3>Détail de Vos Notes</h3>
-            @if (Model.Notes.Any())
+
+            @if (Model.Notes != null && Model.Notes.Any())
             {
-                <table class="table table-striped table-hover">
-                    <thead>
+                <table class="table table-striped table-hover shadow-sm">
+                    <thead class="table-dark">
                         <tr>
                             <th>Cours</th>
                             <th>Type d'Évaluation</th>
@@ -107,9 +72,9 @@
                         @foreach (var note in Model.Notes.OrderByDescending(n => n.DateNote))
                         {
                             <tr>
-                                <td>@note.Cours.Titre</td>
+                                <td>@note.Cours?.Titre</td>
                                 <td>@note.TypeEvaluation</td>
-                                <td>**@note.Valeur** / 20</td>
+                                <td class="fw-bold">@note.Valeur / 20</td>
                                 <td>@note.DateNote.ToShortDateString()</td>
                             </tr>
                         }
@@ -119,7 +84,7 @@
             else
             {
                 <div class="alert alert-info">
-                    Aucune note n'a encore été enregistrée pour vous.
+                    <i class="fas fa-info-circle"></i> Aucune note n'a encore été enregistrée pour vous.
                 </div>
             }
         </div>
@@ -129,7 +94,15 @@
 
 @section Scripts {
     <script>
-        // Si vous utilisez Bootstrap, vous n'avez pas besoin de script additionnel
-        // si data-bs-toggle="tab" est correctement inclus.
+        // Initialisation optionnelle des tabs Bootstrap (si besoin)
+        var triggerTabList = [].slice.call(document.querySelectorAll('#studentDashboardTab button'))
+        triggerTabList.forEach(function (triggerEl) {
+            var tabTrigger = new bootstrap.Tab(triggerEl)
+
+            triggerEl.addEventListener('click', function (event) {
+                event.preventDefault()
+                tabTrigger.show()
+            })
+        })
     </script>
 }

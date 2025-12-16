@@ -3,59 +3,41 @@
     ViewData["Title"] = "Connexion";
 }
 
-<style>
-    /* Force toute la page à occuper 100% de la hauteur */
-    html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden; /* Supprime le scroll */
-    }
-</style>
-
-<!-- Conteneur centré sans scroll -->
-<div style="
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    width:100%;
-">
-    <div style="width:380px;">
-
-        <h2 class="text-center mb-4">Connexion à la Plateforme</h2>
-
-        <form asp-action="Login" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <!-- Nom d'utilisateur -->
-            <div class="form-group mb-3">
-                <label asp-for="NomUtilisateur"></label>
-                <input asp-for="NomUtilisateur" class="form-control" />
-                <span asp-validation-for="NomUtilisateur" class="text-danger"></span>
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg border-0 rounded-4 w-100" style="max-width: 400px;">
+        <div class="card-body p-5">
+            <!-- Icône + titre -->
+            <div class="text-center mb-4">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                    <i class="fas fa-sign-in-alt fa-2x"></i>
+                </div>
+                <h2 class="fw-bold text-dark">Connexion</h2>
+                <p class="text-muted">Entrez vos identifiants pour accéder à la plateforme</p>
             </div>
 
-            <!-- Mot de passe -->
-            <div class="form-group mb-3">
-                <label asp-for="MotDePasse"></label>
-                <input asp-for="MotDePasse" class="form-control" />
-                <span asp-validation-for="MotDePasse" class="text-danger"></span>
-            </div>
+            <form asp-action="Login" method="post" class="needs-validation" novalidate>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <!-- Bouton Se connecter -->
-            <div class="d-grid">
-                <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
-            </div>
-        </form>
+                <div class="mb-3">
+                    <label asp-for="NomUtilisateur" class="form-label fw-bold small text-secondary">Nom d'utilisateur</label>
+                    <input asp-for="NomUtilisateur" class="form-control form-control-lg bg-light border-0" placeholder="Ex: user123" autocomplete="username" />
+                    <span asp-validation-for="NomUtilisateur" class="text-danger small"></span>
+                </div>
 
-        <hr />
+                <div class="mb-4">
+                    <label asp-for="MotDePasse" class="form-label fw-bold small text-secondary">Mot de passe</label>
+                    <input asp-for="MotDePasse" type="password" class="form-control form-control-lg bg-light border-0" autocomplete="current-password" />
+                    <span asp-validation-for="MotDePasse" class="text-danger small"></span>
+                </div>
 
-        <!-- Lien de création de compte -->
-        <div class="text-center mt-3">
-            <p>Vous n'avez pas de compte ?</p>
-            <a asp-action="Register" class="btn btn-outline-success">Créer un compte</a>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm">Se connecter</button>
+                    <a asp-action="Register" class="btn btn-outline-success mt-2 border-0">
+                        <i class="fas fa-user-plus me-1"></i> Créer un compte
+                    </a>
+                </div>
+            </form>
         </div>
-
     </div>
 </div>
 

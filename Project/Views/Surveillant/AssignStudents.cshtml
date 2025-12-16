@@ -1,0 +1,66 @@
+﻿@model List<Project.Models.Etudiant>
+@using Project.Models
+
+@{
+    ViewData["Title"] = "Assigner les Étudiants";
+    var groups = ViewBag.Groups as List<Project.Models.Groupe>;
+}
+
+<h1>Assigner les Étudiants aux Groupes</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<p class="lead">Étudiants actuellement sans groupe assigné : @(Model?.Count ?? 0)</p>
+
+@if (groups == null || !groups.Any())
+{
+    <div class="alert alert-danger">
+        Vous devez d'abord créer des groupes via la page <a asp-action="ManageGroups">Gérer Mes Groupes</a>.
+    </div>
+}
+else if (Model == null || !Model.Any())
+{
+    <div class="alert alert-success">Tous les étudiants sont actuellement assignés à un groupe.</div>
+}
+else
+{
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Étudiant</th>
+                <th>E-mail</th>
+                <th>Assigner à un Groupe</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in Model)
+            {
+                <tr>
+                    @* Assurez-vous que l'entité Etudiant est liée à Utilisateur pour obtenir Nom/Prenom *@
+                    <td>@student.Prenom @student.Nom</td>
+                    <td>@student.Email</td>
+                    <td class="col-md-4">
+                        <form asp-action="Assign" method="post" class="d-flex">
+                            <input type="hidden" name="studentId" value="@student.Id" />
+                            <select name="groupId" class="form-control me-2" required>
+                                <option value="">-- Choisir un Groupe --</option>
+                                @foreach (var group in groups)
+                                {
+                                    <option value="@group.Id">@group.Nom</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary">Assigner</button>
+                        </form>
+                    </td>
+                    <td>
+                        @* Ajoutez un lien vers le profil de l'étudiant ici *@
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

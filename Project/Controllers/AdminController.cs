@@ -10,6 +10,8 @@ using System.Linq;
 using System;
 using System.Threading.Tasks;
 
+namespace Project.Data;
+
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller
 {

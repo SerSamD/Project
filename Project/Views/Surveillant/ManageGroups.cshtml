@@ -1,0 +1,73 @@
+﻿@model List<Project.Models.Groupe>
+
+@{
+    ViewData["Title"] = "Gérer les Groupes";
+    var supervisorId = (int)ViewData["SupervisorId"]; // Récupéré du contrôleur
+}
+
+<h1>Gérer Mes Groupes</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<div class="card mb-4 shadow">
+    <div class="card-header bg-primary text-white">Créer un Nouveau Groupe</div>
+    <div class="card-body">
+        <form asp-action="CreateGroup" method="post">
+            <input type="hidden" name="SurveillantId" value="@supervisorId" />
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="Nom" class="form-label">Nom du Groupe (Ex: Terminale S1)</label>
+                    <input type="text" name="Nom" class="form-control" required />
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success">Créer le Groupe</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<h2>Groupes Gérés</h2>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">Vous n'avez pas encore de groupes sous votre responsabilité.</div>
+}
+else
+{
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Nom du Groupe</th>
+                <th>Nombre d'Étudiants</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var groupe in Model)
+            {
+                <tr>
+                    <td>@groupe.Nom</td>
+                    <td>@(groupe.Etudiants?.Count ?? 0)</td>
+                    <td>
+                        <a asp-controller="Surveillant" asp-action="AssignStudents" asp-route-groupId="@groupe.Id" class="btn btn-sm btn-info me-2">
+                            Assigner/Voir Étudiants
+                        </a>
+                        <a asp-controller="Surveillant" asp-action="ManageSchedule" asp-route-groupId="@groupe.Id" class="btn btn-sm btn-success">
+                            Emploi du Temps
+                        </a>
+                        @* Ajoutez un bouton pour supprimer/modifier le groupe ici *@
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
