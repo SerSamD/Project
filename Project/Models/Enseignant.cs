@@ -1,4 +1,6 @@
-﻿public class Enseignant
+﻿using Project.Models;
+
+public class Enseignant
 {
     public int Id { get; set; }
 

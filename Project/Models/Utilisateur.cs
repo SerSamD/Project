@@ -1,43 +1,50 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
-public class Utilisateur
+// Assurez-vous que le namespace correspond au nom exact de votre projet !
+namespace Project.Models
 {
-    public int Id { get; set; }
+    public class Utilisateur
+    {
+        public int Id { get; set; }
 
-    [Required]
-    public string NomUtilisateur { get; set; }
+        [Required]
+        [Display(Name = "Nom d'utilisateur")]
+        public string NomUtilisateur { get; set; }
 
-    [Required]
-    public string MotDePasseHash { get; set; }
+        [Required]
+        [Display(Name = "Mot de passe hashé")]
+        public string MotDePasseHash { get; set; }
 
-    [Required]
-    public string Role { get; set; } // Rôle ACTUEL (Admin, Enseignant, Etudiant, ou Pending)
+        // --- Informations d'identité centralisées ---
+        [Required]
+        public string Nom { get; set; }
 
-    // --- NOUVELLES PROPRIÉTÉS POUR L'APPROBATION ---
+        [Required]
+        public string Prenom { get; set; }
 
-    /// <summary>
-    /// Indique si l'utilisateur a été approuvé par un administrateur.
-    /// Les utilisateurs non approuvés ne peuvent pas se connecter.
-    /// </summary>
-    public bool IsApproved { get; set; } = false; // Par défaut : NON approuvé
+        // CORRECTION CRUCIALE : Rendu nullable pour accepter les valeurs NULL de la DB
+        public string? Email { get; set; }
 
-    /// <summary>
-    /// Stocke le rôle demandé lors de l'inscription ("Etudiant" ou "Enseignant").
-    /// Ce rôle sera copié dans la propriété 'Role' après l'approbation.
-    /// </summary>
-    public string PendingRole { get; set; } = string.Empty;
+        // --- Champs de Rôle et Approbation ---
 
-    // Informations d'identité centralisées
-    [Required]
-    public string Nom { get; set; }
+        [Required]
+        [Display(Name = "Rôle Actif")]
+        public string Role { get; set; }
 
-    [Required]
-    public string Prenom { get; set; }
+        [Display(Name = "Rôle en Attente")]
+        // Rendu nullable
+        public string? PendingRole { get; set; }
 
-    public string Email { get; set; }
+        [Display(Name = "Approuvé")]
+        public bool IsApproved { get; set; } = true;
 
-    // Relations 1-à-1 (Propriétés de navigation)
-    public Enseignant EnseignantProfil { get; set; }
-    public Etudiant EtudiantProfil { get; set; }
+        // --- Relations 1-à-1 (Propriétés de navigation) ---
+
+        public Enseignant EnseignantProfil { get; set; }
+        public Etudiant EtudiantProfil { get; set; }
+
+        // Profil pour le Surveillant Général
+        public Surveillant SurveillantProfil { get; set; }
+    }
 }
-// ASSUREZ-VOUS QUE LA CLASSE N'EST PAS DÉFINIE UNE SECONDE FOIS ICI

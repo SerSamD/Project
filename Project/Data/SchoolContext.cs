@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+// TRÈS IMPORTANT : Assurez-vous que ce namespace correspond au nom exact de votre projet !
 using Project.Models;
 
 public class SchoolContext : DbContext
@@ -7,21 +8,26 @@ public class SchoolContext : DbContext
     {
     }
 
-    // --- DbSets ---
+    // ============================================================
+    // --- DbSets (Tables de la Base de Données) ---
+    // ============================================================
     public DbSet<Utilisateur> Utilisateurs { get; set; }
     public DbSet<Enseignant> Enseignants { get; set; }
     public DbSet<Etudiant> Etudiants { get; set; }
     public DbSet<Cours> Cours { get; set; }
     public DbSet<Inscription> Inscriptions { get; set; }
     public DbSet<Note> Notes { get; set; }
+    public DbSet<Surveillant> Surveillants { get; set; } // DbSet pour Surveillant
 
+
+    // ============================================================
+    // --- Configuration des relations (Fluent API) ---
+    // ============================================================
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // ============================================================
-        // 1️⃣ RELATIONS UN-À-UN ENTRE UTILISATEUR ET ENSEIGNANT
-        // ============================================================
+        // 1️⃣ RELATION UN-À-UN ENTRE UTILISATEUR ET ENSEIGNANT
         modelBuilder.Entity<Enseignant>()
             .HasOne(e => e.Utilisateur)
             .WithOne(u => u.EnseignantProfil)
@@ -32,9 +38,7 @@ public class SchoolContext : DbContext
             .HasIndex(e => e.UtilisateurId)
             .IsUnique();
 
-        // ============================================================
-        // 2️⃣ RELATIONS UN-À-UN ENTRE UTILISATEUR ET ETUDIANT
-        // ============================================================
+        // 2️⃣ RELATION UN-À-UN ENTRE UTILISATEUR ET ETUDIANT
         modelBuilder.Entity<Etudiant>()
             .HasOne(e => e.Utilisateur)
             .WithOne(u => u.EtudiantProfil)
@@ -45,9 +49,19 @@ public class SchoolContext : DbContext
             .HasIndex(e => e.UtilisateurId)
             .IsUnique();
 
-        // ============================================================
-        // 3️⃣ RELATION NOTE : Etudiant / Cours
-        // ============================================================
+        // 3️⃣ RELATION UN-À-UN ENTRE UTILISATEUR ET SURVEILLANT
+        modelBuilder.Entity<Surveillant>()
+            .HasOne(s => s.Utilisateur)
+            // Propriété de navigation dans Utilisateur.cs
+            .WithOne(u => u.SurveillantProfil)
+            .HasForeignKey<Surveillant>(s => s.UtilisateurId)
+            .IsRequired();
+
+        modelBuilder.Entity<Surveillant>()
+            .HasIndex(s => s.UtilisateurId)
+            .IsUnique();
+
+        // 4️⃣ RELATION NOTE : Etudiant / Cours (N-à-N via Entité Jonction)
         modelBuilder.Entity<Note>()
             .HasOne(n => n.Etudiant)
             .WithMany(e => e.Notes)
@@ -60,9 +74,7 @@ public class SchoolContext : DbContext
             .HasForeignKey(n => n.CoursId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ============================================================
-        // 4️⃣ RELATION INSCRIPTION : Etudiant / Cours
-        // ============================================================
+        // 5️⃣ RELATION INSCRIPTION : Etudiant / Cours (N-à-N via Entité Jonction)
         modelBuilder.Entity<Inscription>()
             .HasOne(i => i.Etudiant)
             .WithMany(e => e.Inscriptions)
@@ -75,21 +87,21 @@ public class SchoolContext : DbContext
             .HasForeignKey(i => i.CoursId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ============================================================
-        // 5️⃣ SEED DATA : Utilisateur Admin
-        // ============================================================
-       
-
+        // 6️⃣ SEED DATA : Utilisateur Admin
         modelBuilder.Entity<Utilisateur>().HasData(
             new Utilisateur
             {
                 Id = 1,
                 NomUtilisateur = "admin",
-                MotDePasseHash = "admin123", 
+                MotDePasseHash = "admin123",
                 Role = "Admin",
                 Nom = "Système",
                 Prenom = "Administrateur",
-                Email = "admin@ecole.com"
+                Email = "admin@ecole.com",
+
+                // Champs pour l'approbation (nécessaire pour le seed)
+                IsApproved = true,
+                PendingRole = "Admin"
             }
         );
     }

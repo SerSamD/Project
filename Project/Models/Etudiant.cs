@@ -1,4 +1,6 @@
-﻿public class Etudiant
+﻿using Project.Models;
+
+public class Etudiant
 {
     public int Id { get; set; }
     public string Nom { get; set; } // Retirer ces champs si vous utilisez Utilisateur pour l'identité

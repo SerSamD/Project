@@ -1,0 +1,130 @@
+﻿@model Project.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Tableau de Bord Administrateur";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Dashboards par mois</h2>
+    </div>
+</div>
+
+<div class="row mb-5">
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-left-warning h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Utilisateurs en Attente
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @Model.UtilisateursEnAttente
+                        </div>
+                    </div>
+                </div>
+                <a asp-controller="Admin" asp-action="PendingUsers" class="small text-warning mt-2 d-block">Gérer</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-left-info h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Nouveaux Utilisateurs Aujourd'hui
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-left-success h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Utilisateurs Actifs
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @(Model.TotalEtudiants + Model.TotalEnseignants + Model.TotalSurveillants)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-left-primary h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Utilisateurs (DB)
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @Model.TotalUtilisateurs
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row">
+
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Inscriptions par Mois (Simulation)</h6>
+            </div>
+            <div class="card-body">
+                <p>--- Espace réservé pour le graphique des Inscriptions ---</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Répartition des Rôles</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Étudiants
+                        <span class="badge bg-primary rounded-pill">@Model.TotalEtudiants</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Enseignants
+                        <span class="badge bg-warning rounded-pill">@Model.TotalEnseignants</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Surveillants
+                        <span class="badge bg-info rounded-pill">@Model.TotalSurveillants</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card shadow mt-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Actions Rapides</h6>
+            </div>
+            <div class="card-body text-center">
+                <a asp-controller="Admin" asp-action="CreateUser" class="btn btn-primary btn-block mb-2">Ajouter un Nouveau Compte</a>
+                <a asp-controller="Admin" asp-action="PendingUsers" class="btn btn-warning btn-block">Voir les Approbations</a>
+            </div>
+        </div>
+
+    </div>
+</div>

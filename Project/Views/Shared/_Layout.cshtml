@@ -14,9 +14,9 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
-            min-height: 100vh; /* Pour le centrage vertical potentiel si besoin */
-            display: flex; /* Active Flexbox sur le body */
-            flex-direction: column; /* Empile le header, le contenu et le footer */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         /* Conteneur principal pour toutes les pages */
@@ -25,7 +25,7 @@
             max-width: 1200px;
             margin: auto;
             padding: 20px;
-            flex-grow: 1; /* Permet au contenu de prendre tout l'espace vertical disponible */
+            flex-grow: 1;
         }
 
         /* Ajustement automatique des images, tables, formulaires */
@@ -43,17 +43,17 @@
             background: #0d6efd;
             color: white;
             margin-bottom: 20px;
-            flex-shrink: 0; /* Empêche le header de se contracter */
+            flex-shrink: 0;
             width: 100%;
         }
 
         /* Pied de page collé au bas */
         footer {
-            margin-top: auto; /* Pousse le footer vers le bas */
+            margin-top: auto;
             padding: 20px;
             background: #f1f1f1;
             text-align: center;
-            flex-shrink: 0; /* Empêche le footer de se contracter */
+            flex-shrink: 0;
             width: 100%;
         }
     </style>
@@ -68,7 +68,38 @@
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MonSite</a>
 
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-end">
+                @* Ajout du bouton d'activation du menu pour le responsive *@
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                @* Conteneur du menu (ajustement de la classe pour le responsive) *@
+                <div class="collapse navbar-collapse" id="navbarNav">
+
+                    <ul class="navbar-nav flex-grow-1">
+
+                        @* =============================================== *@
+                        @* NOUVEAU : LIENS DE NAVIGATION ADMIN *@
+                        @* =============================================== *@
+                        @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-controller="Admin" asp-action="Index">Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-warning" asp-controller="Admin" asp-action="PendingUsers">Approbations</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-info" asp-controller="Admin" asp-action="CreateUser">Créer Utilisateur</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-danger" asp-controller="Admin" asp-action="UsersList">Gérer Comptes</a>
+                            </li>
+                        }
+                        @* =============================================== *@
+                    </ul>
+
+                    @* Liens d'utilisateur (alignés à droite) *@
                     <ul class="navbar-nav">
                         @if (User.Identity.IsAuthenticated)
                         {
@@ -95,7 +126,9 @@
     </div>
 
 
-    
+    <footer>
+        <p>&copy; @DateTime.Now.Year - MonSite. Tous droits réservés.</p>
+    </footer>
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

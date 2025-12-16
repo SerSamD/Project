@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection; 
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure; 
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using Project.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 

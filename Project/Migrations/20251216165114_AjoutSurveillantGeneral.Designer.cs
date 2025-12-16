@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Project.Migrations
 {
     [DbContext(typeof(SchoolContext))]
-    partial class SchoolContextModelSnapshot : ModelSnapshot
+    [Migration("20251216165114_AjoutSurveillantGeneral")]
+    partial class AjoutSurveillantGeneral
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -156,7 +159,7 @@ namespace Project.Migrations
                     b.ToTable("Notes");
                 });
 
-            modelBuilder.Entity("Project.Models.Surveillant", b =>
+            modelBuilder.Entity("SurveillantGeneral", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -172,10 +175,10 @@ namespace Project.Migrations
                     b.HasIndex("UtilisateurId")
                         .IsUnique();
 
-                    b.ToTable("Surveillants");
+                    b.ToTable("SurveillantsGeneraux");
                 });
 
-            modelBuilder.Entity("Project.Models.Utilisateur", b =>
+            modelBuilder.Entity("Utilisateur", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -184,6 +187,7 @@ namespace Project.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<bool>("IsApproved")
@@ -202,6 +206,7 @@ namespace Project.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("PendingRole")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Prenom")
@@ -244,7 +249,7 @@ namespace Project.Migrations
 
             modelBuilder.Entity("Enseignant", b =>
                 {
-                    b.HasOne("Project.Models.Utilisateur", "Utilisateur")
+                    b.HasOne("Utilisateur", "Utilisateur")
                         .WithOne("EnseignantProfil")
                         .HasForeignKey("Enseignant", "UtilisateurId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -255,7 +260,7 @@ namespace Project.Migrations
 
             modelBuilder.Entity("Etudiant", b =>
                 {
-                    b.HasOne("Project.Models.Utilisateur", "Utilisateur")
+                    b.HasOne("Utilisateur", "Utilisateur")
                         .WithOne("EtudiantProfil")
                         .HasForeignKey("Etudiant", "UtilisateurId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -302,11 +307,11 @@ namespace Project.Migrations
                     b.Navigation("Etudiant");
                 });
 
-            modelBuilder.Entity("Project.Models.Surveillant", b =>
+            modelBuilder.Entity("SurveillantGeneral", b =>
                 {
-                    b.HasOne("Project.Models.Utilisateur", "Utilisateur")
-                        .WithOne("SurveillantProfil")
-                        .HasForeignKey("Project.Models.Surveillant", "UtilisateurId")
+                    b.HasOne("Utilisateur", "Utilisateur")
+                        .WithOne("SurveillantGeneralProfil")
+                        .HasForeignKey("SurveillantGeneral", "UtilisateurId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -332,7 +337,7 @@ namespace Project.Migrations
                     b.Navigation("Notes");
                 });
 
-            modelBuilder.Entity("Project.Models.Utilisateur", b =>
+            modelBuilder.Entity("Utilisateur", b =>
                 {
                     b.Navigation("EnseignantProfil")
                         .IsRequired();
@@ -340,7 +345,7 @@ namespace Project.Migrations
                     b.Navigation("EtudiantProfil")
                         .IsRequired();
 
-                    b.Navigation("SurveillantProfil")
+                    b.Navigation("SurveillantGeneralProfil")
                         .IsRequired();
                 });
 #pragma warning restore 612, 618
