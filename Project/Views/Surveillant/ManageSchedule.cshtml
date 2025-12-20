@@ -1,49 +1,73 @@
 ﻿@using Project.Models
+@using Project.ViewModels
 @using System.Globalization
-@model Project.ViewModels.AddScheduleViewModel
+
+@model AddScheduleViewModel
 
 @{
     ViewData["Title"] = "Gérer l'Emploi du Temps";
-    var schedule = ViewBag.Schedule as List<EmploiDuTemps>;
-    var selectedGroupId = (int?)ViewBag.SelectedGroupId;
-    var selectedGroupName = ViewBag.SelectedGroupName as string;
 
-    // Définition des jours pour la grille (Lundi à Vendredi)
-    var days = Enum.GetValues(typeof(DayOfWeek))
-        .Cast<DayOfWeek>()
+    // 1. Définition des jours (Lundi à Vendredi)
+    var days = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>()
         .Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)
-        .OrderBy(d => (int)d)
-        .ToList();
+        .OrderBy(d => (int)d == 0 ? 7 : (int)d).ToList();
 
-    // Plage horaire de l'école
+    // 2. LOGIQUE DYNAMIQUE DES HEURES
+    // Par défaut : 8h à 18h
     var startHour = 8;
     var endHour = 18;
+
+    // Si des sessions existent, on adapte le tableau pour tout afficher
+    if (Model.ScheduleList != null && Model.ScheduleList.Any())
+    {
+        // Trouver l'heure de début la plus tôt
+        int minDataHour = Model.ScheduleList.Min(s => s.HeureDebut.Hours);
+
+        // Trouver l'heure de fin la plus tard
+        int maxDataHour = Model.ScheduleList.Max(s => s.HeureFin.Hours);
+
+        // Si un cours finit à "et demi" (ex: 18:30), il faut une ligne de plus (jusqu'à 19h)
+        if (Model.ScheduleList.Any(s => s.HeureFin.Minutes > 0))
+        {
+            maxDataHour++;
+        }
+
+        // On élargit les bornes si nécessaire
+        if (minDataHour < startHour) startHour = minDataHour;
+        if (maxDataHour > endHour) endHour = maxDataHour;
+    }
 }
 
 <h1>Gérer l'Emploi du Temps</h1>
 
 @if (ViewBag.SuccessMessage != null)
 {
-    <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+    <div class="alert alert-success alert-dismissible fade show">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 @if (ViewBag.ErrorMessage != null)
 {
-    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+    <div class="alert alert-danger alert-dismissible fade show">
+        @ViewBag.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
-<div class="card mb-4 shadow">
+<div class="card mb-4 shadow-sm">
     <div class="card-header bg-secondary text-white">Sélectionner un Groupe</div>
     <div class="card-body">
         <form asp-action="ManageSchedule" method="get">
             <div class="row">
                 <div class="col-md-6">
-                    <label class="form-label">Choisir le Groupe :</label>
-                    <select name="groupId" class="form-control" onchange="this.form.submit()">
+                    <label class="form-label fw-bold">Choisir le Groupe :</label>
+                    <select name="groupId" class="form-select" onchange="this.form.submit()">
                         <option value="">-- Sélectionnez un Groupe --</option>
-                        @foreach (var group in Model.Groupes)
+                        @foreach (var item in Model.Groupes)
                         {
-                            <option value="@group.Value" selected="@(group.Value == selectedGroupId?.ToString())">
-                                @group.Text
+                            <option value="@item.Value" selected="@(item.Value == Model.GroupeId.ToString())">
+                                @item.Text
                             </option>
                         }
                     </select>
@@ -53,56 +77,54 @@
     </div>
 </div>
 
-@if (selectedGroupId.HasValue)
+@if (Model.GroupeId > 0)
 {
-    <h2 class="mt-4">Emploi du Temps pour: <span class="badge bg-primary">@selectedGroupName</span></h2>
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <h2 class="mb-0">
+            Planning pour : <span class="badge bg-primary">@Model.SelectedGroupName</span>
+        </h2>
 
-    <div class="card mb-5 shadow">
-        <div class="card-header bg-success text-white">Ajouter une Nouvelle Session</div>
+        <form asp-action="ResetSchedule" method="post">
+            <input type="hidden" name="groupId" value="@Model.GroupeId" />
+            <button type="submit" class="btn btn-danger shadow-sm"
+                    onclick="return confirm('ATTENTION : Vous allez supprimer TOUTES les sessions de ce groupe.\n\nCette action est irréversible.\n\nVoulez-vous vraiment tout effacer ?');">
+                <i class="fas fa-trash-alt me-2"></i> Réinitialiser
+            </button>
+        </form>
+    </div>
+
+    <div class="card mb-5 shadow-sm border-left-success">
+        <div class="card-header bg-success text-white">Ajouter une Session</div>
         <div class="card-body">
             <form asp-action="AddSession" method="post">
-                <input type="hidden" asp-for="GroupeId" value="@selectedGroupId" />
+                <input type="hidden" asp-for="GroupeId" />
 
                 <div class="row">
-
                     <div class="col-md-3 mb-3">
-                        <label asp-for="CoursId" class="form-label"></label>
-                        <select asp-for="CoursId" class="form-control" asp-items="Model.CoursList">
-                            <option value="">Choisir la matière</option>
-                        </select>
-                        <span asp-validation-for="CoursId" class="text-danger small"></span>
+                        <label asp-for="CoursId" class="form-label">Matière</label>
+                        <select asp-for="CoursId" class="form-select" asp-items="Model.CoursList"></select>
                     </div>
-
                     <div class="col-md-3 mb-3">
-                        <label asp-for="EnseignantId" class="form-label"></label>
-                        <select asp-for="EnseignantId" class="form-control" asp-items="Model.Enseignants">
-                            <option value="">Choisir l'enseignant</option>
-                        </select>
-                        <span asp-validation-for="EnseignantId" class="text-danger small"></span>
+                        <label asp-for="EnseignantId" class="form-label">Enseignant</label>
+                        <select asp-for="EnseignantId" class="form-select" asp-items="Model.Enseignants"></select>
                     </div>
-
                     <div class="col-md-3 mb-3">
-                        <label asp-for="Jour" class="form-label"></label>
-                        <select asp-for="Jour" class="form-control" asp-items="Model.Jours"></select>
-                        <span asp-validation-for="Jour" class="text-danger small"></span>
+                        <label asp-for="Jour" class="form-label">Jour</label>
+                        <select asp-for="Jour" class="form-select" asp-items="Model.Jours"></select>
                     </div>
-
                     <div class="col-md-3 mb-3 d-flex align-items-end">
-                        <button type="submit" class="btn btn-success w-100">Ajouter la Session</button>
+                        <button type="submit" class="btn btn-success w-100">Ajouter</button>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-3 mb-3">
-                        <label asp-for="HeureDebut" class="form-label"></label>
+                        <label asp-for="HeureDebut" class="form-label">Début</label>
                         <input asp-for="HeureDebut" type="time" class="form-control" />
-                        <span asp-validation-for="HeureDebut" class="text-danger small"></span>
                     </div>
-
                     <div class="col-md-3 mb-3">
-                        <label asp-for="HeureFin" class="form-label"></label>
+                        <label asp-for="HeureFin" class="form-label">Fin</label>
                         <input asp-for="HeureFin" type="time" class="form-control" />
-                        <span asp-validation-for="HeureFin" class="text-danger small"></span>
                     </div>
                 </div>
             </form>
@@ -110,13 +132,13 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-bordered text-center align-middle schedule-table">
-            <thead>
-                <tr class="table-primary">
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-dark">
+                <tr>
                     <th>Heure</th>
                     @foreach (var day in days)
                     {
-                        <th>@day.ToString()</th>
+                        <th>@day</th>
                     }
                 </tr>
             </thead>
@@ -124,28 +146,47 @@
                 @for (int hour = startHour; hour < endHour; hour++)
                 {
                     <tr>
-                        <th scope="row" class="bg-light">@hour:00 - @(hour + 1):00</th>
+                        <th class="bg-light" style="width:100px; white-space:nowrap;">
+                            @hour:00 - @(hour + 1):00
+                        </th>
+
                         @foreach (var day in days)
                         {
-                            <td>
+                            <td class="p-1 align-top" style="min-width: 150px; height: 60px;">
                                 @{
-                                    // Trouver toutes les sessions qui chevauchent l'heure courante (ex: 8h00 - 9h00)
-                                    var sessionsInHour = schedule?.Where(s =>
+                                    // Récupération des sessions pour ce créneau
+                                    var sessions = Model.ScheduleList.Where(s =>
                                     s.Jour == day &&
                                     s.HeureDebut.Hours <= hour &&
                                     s.HeureFin.Hours > hour).ToList();
                                 }
-                                @if (sessionsInHour != null && sessionsInHour.Any())
+
+                                @foreach (var session in sessions)
                                 {
-                                    @foreach (var session in sessionsInHour)
-                                    {
-                                        <div class="schedule-entry bg-info text-white p-2 rounded mb-1 shadow-sm">
-                                            <strong class="d-block">@session.Cours.Titre</strong>
-                                            <span class="small">@session.Enseignant.Utilisateur.Nom</span>
-                                            <span class="d-block small">(@session.HeureDebut.ToString(@"hh\:mm") - @session.HeureFin.ToString(@"hh\:mm"))</span>
-                                            @* TODO: Ajoutez ici un lien pour supprimer la session *@
+                                    <div class="card bg-info text-white mb-1 p-1 position-relative border-0 shadow-sm text-start">
+
+                                        <form asp-action="DeleteSession" method="post" class="position-absolute top-0 end-0" style="z-index: 10;">
+                                            <input type="hidden" name="sessionId" value="@session.Id" />
+                                            <button type="submit" class="btn btn-sm btn-link text-white p-0 px-1"
+                                                    onclick="return confirm('Voulez-vous vraiment supprimer ce cours ?');"
+                                                    title="Supprimer">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+
+                                        <div class="pe-3">
+                                            <small class="d-block fw-bold text-truncate">
+                                                @session.Cours?.Titre
+                                            </small>
+                                            <small class="d-block text-truncate" style="font-size: 0.8em;">
+                                                <i class="fas fa-user-tie me-1"></i>
+                                                @session.Enseignant?.Utilisateur?.Nom
+                                            </small>
+                                            <span class="badge bg-light text-dark mt-1" style="font-size: 0.7em;">
+                                                @session.HeureDebut.ToString(@"hh\:mm") - @session.HeureFin.ToString(@"hh\:mm")
+                                            </span>
                                         </div>
-                                    }
+                                    </div>
                                 }
                             </td>
                         }
@@ -154,11 +195,12 @@
             </tbody>
         </table>
     </div>
-
 }
 else
 {
-    <div class="alert alert-info mt-4">Veuillez sélectionner un groupe ci-dessus pour gérer son emploi du temps.</div>
+    <div class="alert alert-info mt-4">
+        <i class="fas fa-info-circle me-2"></i>Veuillez sélectionner un groupe pour afficher son emploi du temps.
+    </div>
 }
 
 @section Scripts {

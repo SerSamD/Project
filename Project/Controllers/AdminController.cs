@@ -1,291 +1,372 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Project.Models;
 using Project.ViewModels;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Linq;
-using System;
 using System.Threading.Tasks;
 
-namespace Project.Data;
-
-[Authorize(Roles = "Admin")]
-public class AdminController : Controller
+namespace Project.Data // Vérifiez que le namespace correspond bien à votre projet
 {
-    private readonly SchoolContext _context;
-
-    public AdminController(SchoolContext context)
+    [Authorize(Roles = "Admin")]
+    public class AdminController : Controller
     {
-        _context = context;
-    }
+        private readonly SchoolContext _context;
 
-    // ============================================================
-    // 🔐 HASH MOT DE PASSE (IDENTIQUE À AccountController)
-    // ============================================================
-    private string HashPassword(string password)
-    {
-        using (SHA256 sha256Hash = SHA256.Create())
+        public AdminController(SchoolContext context)
         {
-            byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(password));
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                builder.Append(bytes[i].ToString("x2"));
-            }
-            return builder.ToString();
+            _context = context;
         }
-    }
 
-    // ============================================================
-    // 1️⃣ DASHBOARD
-    // ============================================================
-    // Dans Controllers/AdminController.cs
-
-    public async Task<IActionResult> Index()
-    {
-        // Calcul des statistiques
-        var totalUsers = await _context.Utilisateurs.CountAsync();
-        var pendingUsers = await _context.Utilisateurs.CountAsync(u => u.IsApproved == false && u.Role == "Pending");
-        var totalStudents = await _context.Utilisateurs.CountAsync(u => u.Role == "Etudiant" && u.IsApproved == true);
-        var totalTeachers = await _context.Utilisateurs.CountAsync(u => u.Role == "Enseignant" && u.IsApproved == true);
-        var totalSupervisors = await _context.Utilisateurs.CountAsync(u => u.Role == "Surveillant" && u.IsApproved == true);
-
-        var viewModel = new AdminDashboardViewModel
+        // ============================================================
+        // 🔐 HASH MOT DE PASSE
+        // ============================================================
+        private string HashPassword(string password)
         {
-            UtilisateursEnAttente = pendingUsers,
-            TotalUtilisateurs = totalUsers,
-            TotalEtudiants = totalStudents,
-            TotalEnseignants = totalTeachers,
-            TotalSurveillants = totalSupervisors
-            // Les totaux par mois (utilisateurs, inscriptions) nécessitent une requête plus complexe
-        };
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(password));
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
 
-        ViewData["Title"] = "Tableau de Bord Administrateur";
-        return View(viewModel);
-    }
-
-    // ============================================================
-    // 2️⃣ APPROBATION DES UTILISATEURS EN ATTENTE (RESTORED)
-    // ============================================================
-
-    // GET: Admin/PendingUsers (Routage doit fonctionner maintenant)
-    public async Task<IActionResult> PendingUsers()
-    {
-        var pendingUsers = await _context.Utilisateurs
-            .Where(u => u.IsApproved == false && u.Role == "Pending")
-            .OrderBy(u => u.NomUtilisateur)
-            .ToListAsync();
-
-        // Si le 404 persiste, remplacez par : return View("~/Views/Admin/PendingUsers.cshtml", pendingUsers);
-        return View(pendingUsers);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ApproveUser(int id)
-    {
-        var user = await _context.Utilisateurs.FindAsync(id);
-        if (user == null || user.IsApproved || user.Role != "Pending")
+        // ============================================================
+        // 1️⃣ DASHBOARD
+        // ============================================================
+        public async Task<IActionResult> Index()
         {
-            TempData["ErrorMessage"] = "Utilisateur introuvable ou déjà approuvé.";
+            var totalUsers = await _context.Utilisateurs.CountAsync();
+            var pendingUsers = await _context.Utilisateurs.CountAsync(u => u.IsApproved == false && u.Role == "Pending");
+            var totalStudents = await _context.Utilisateurs.CountAsync(u => u.Role == "Etudiant" && u.IsApproved == true);
+            var totalTeachers = await _context.Utilisateurs.CountAsync(u => u.Role == "Enseignant" && u.IsApproved == true);
+            var totalSupervisors = await _context.Utilisateurs.CountAsync(u => u.Role == "Surveillant" && u.IsApproved == true);
+
+            var viewModel = new AdminDashboardViewModel
+            {
+                UtilisateursEnAttente = pendingUsers,
+                TotalUtilisateurs = totalUsers,
+                TotalEtudiants = totalStudents,
+                TotalEnseignants = totalTeachers,
+                TotalSurveillants = totalSupervisors,
+
+                // Données pour le graphique Chart.js
+                ChartLabels = new string[] { "Jan", "Fév", "Mar", "Avr", "Mai", "Juin" },
+                ChartValues = new int[] { 12, 19, 3, 5, 2, 30 }
+            };
+
+            ViewData["Title"] = "Tableau de Bord Administrateur";
+            return View(viewModel);
+        }
+
+        // ============================================================
+        // 2️⃣ APPROBATION DES UTILISATEURS (PENDING)
+        // ============================================================
+        public async Task<IActionResult> PendingUsers()
+        {
+            var pendingUsers = await _context.Utilisateurs
+                .Where(u => u.IsApproved == false && u.Role == "Pending")
+                .OrderBy(u => u.NomUtilisateur)
+                .ToListAsync();
+
+            return View(pendingUsers);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveUser(int id)
+        {
+            var user = await _context.Utilisateurs.FindAsync(id);
+            if (user == null || user.IsApproved || user.Role != "Pending")
+            {
+                TempData["ErrorMessage"] = "Utilisateur introuvable ou déjà approuvé.";
+                return RedirectToAction(nameof(PendingUsers));
+            }
+            user.IsApproved = true;
+            user.Role = user.PendingRole; 
+            _context.Utilisateurs.Update(user);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = $"L'utilisateur {user.NomUtilisateur} a été approuvé.";
             return RedirectToAction(nameof(PendingUsers));
         }
-        user.IsApproved = true;
-        user.Role = user.PendingRole;
-        _context.Utilisateurs.Update(user);
-        await _context.SaveChangesAsync();
-        TempData["SuccessMessage"] = $"L'utilisateur {user.NomUtilisateur} a été approuvé.";
-        return RedirectToAction(nameof(PendingUsers));
-    }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RejectUser(int id)
-    {
-        var user = await _context.Utilisateurs.FindAsync(id);
-        if (user == null)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectUser(int id)
         {
-            TempData["ErrorMessage"] = "Utilisateur introuvable.";
+            var user = await _context.Utilisateurs.FindAsync(id);
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "Utilisateur introuvable.";
+                return RedirectToAction(nameof(PendingUsers));
+            }
+            // On nettoie les liens éventuels avant suppression
+            await DeleteSpecificProfile(user, user.PendingRole);
+            
+            _context.Utilisateurs.Remove(user);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = $"L'utilisateur {user.NomUtilisateur} a été rejeté et supprimé.";
             return RedirectToAction(nameof(PendingUsers));
         }
-        await DeleteSpecificProfile(user, user.PendingRole);
-        _context.Utilisateurs.Remove(user);
-        await _context.SaveChangesAsync();
-        TempData["SuccessMessage"] = $"L'utilisateur {user.NomUtilisateur} a été rejeté et supprimé.";
-        return RedirectToAction(nameof(PendingUsers));
-    }
 
-
-    // ============================================================
-    // 3️⃣ CRÉATION UTILISATEUR (ADMIN)
-    // ============================================================
-    [HttpGet]
-    public IActionResult CreateUser()
-    {
-        ViewBag.Roles = new List<string> { "Admin", "Enseignant", "Etudiant", "Surveillant" };
-        ViewBag.SuccessMessage = TempData["SuccessMessage"];
-        ViewBag.ErrorMessage = TempData["ErrorMessage"];
-        return View();
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateUser(AdminCreateUserViewModel model)
-    {
-        ViewBag.Roles = new List<string> { "Admin", "Enseignant", "Etudiant", "Surveillant" };
-
-        if (!ModelState.IsValid)
+        // ============================================================
+        // 3️⃣ CRÉATION UTILISATEUR (ADMIN)
+        // ============================================================
+        [HttpGet]
+        public IActionResult CreateUser()
         {
-            // Affichage des erreurs de validation dans la console pour le débogage
-            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
-            {
-                Console.WriteLine("MODEL ERROR: " + error.ErrorMessage);
-            }
-            return View(model);
+            ViewBag.Roles = new List<string> { "Admin", "Enseignant", "Etudiant", "Surveillant" };
+            return View();
         }
 
-        if (await _context.Utilisateurs.AnyAsync(u => u.NomUtilisateur == model.NomUtilisateur))
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateUser(AdminCreateUserViewModel model)
         {
-            ModelState.AddModelError("NomUtilisateur", "Ce nom d'utilisateur est déjà pris.");
-            return View(model);
+            ViewBag.Roles = new List<string> { "Admin", "Enseignant", "Etudiant", "Surveillant" };
+
+            if (!ModelState.IsValid) return View(model);
+
+            if (await _context.Utilisateurs.AnyAsync(u => u.NomUtilisateur == model.NomUtilisateur))
+            {
+                ModelState.AddModelError("NomUtilisateur", "Ce nom d'utilisateur est déjà pris.");
+                return View(model);
+            }
+
+            var newUser = new Utilisateur
+            {
+                NomUtilisateur = model.NomUtilisateur,
+                Nom = model.Nom,
+                Prenom = model.Prenom,
+                Email = model.Email,
+                Role = model.Role,
+                IsApproved = true,
+                PendingRole = model.Role,
+                MotDePasseHash = HashPassword(model.MotDePasse)
+            };
+
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    _context.Utilisateurs.Add(newUser);
+                    await _context.SaveChangesAsync();
+                    await CreateSpecificProfile(newUser, model.Role);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    TempData["SuccessMessage"] = $"L'utilisateur '{newUser.NomUtilisateur}' a été créé avec succès.";
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    TempData["ErrorMessage"] = $"Erreur lors de la création : {ex.Message}";
+                }
+            }
+            return RedirectToAction(nameof(CreateUser));
         }
 
-        var newUser = new Utilisateur
+        // ============================================================
+        // 4️⃣ GESTION DES UTILISATEURS ACTIFS
+        // ============================================================
+        public async Task<IActionResult> ActiveUsers()
         {
-            NomUtilisateur = model.NomUtilisateur,
-            Nom = model.Nom,
-            Prenom = model.Prenom,
-            Email = model.Email,
-            Role = model.Role,
-            IsApproved = true,
-            PendingRole = model.Role,
-            MotDePasseHash = HashPassword(model.MotDePasse)
-        };
+            var users = await _context.Utilisateurs
+                .Where(u => u.Role != "Admin" && u.IsApproved == true)
+                .OrderBy(u => u.Role)
+                .ThenBy(u => u.NomUtilisateur)
+                .ToListAsync();
 
-        // DÉBUT DE LA TRANSACTION
-        using (var transaction = await _context.Database.BeginTransactionAsync())
+            // Pointe vers la vue UsersList.cshtml
+            return View("UsersList", users);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            try
+            var user = await _context.Utilisateurs.FindAsync(id);
+
+            if (user == null || user.Role == "Admin")
             {
-                _context.Utilisateurs.Add(newUser);
-                await _context.SaveChangesAsync();
-
-                await CreateSpecificProfile(newUser, model.Role);
-                await _context.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-
-                TempData["SuccessMessage"] = $"L'utilisateur '{newUser.NomUtilisateur}' a été créé avec succès.";
+                TempData["ErrorMessage"] = "Utilisateur introuvable ou suppression non autorisée.";
+                return RedirectToAction(nameof(ActiveUsers));
             }
-            catch (DbUpdateException ex)
+
+            try 
             {
-                await transaction.RollbackAsync();
-                TempData["ErrorMessage"] = $"Erreur DB : Échec de la création. Détails: {ex.InnerException?.Message ?? ex.Message}";
+                // Appel de la méthode corrigée pour gérer les clés étrangères
+                await DeleteSpecificProfile(user, user.Role);
+                
+                _context.Utilisateurs.Remove(user);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"L'utilisateur {user.NomUtilisateur} a été supprimé.";
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
-                TempData["ErrorMessage"] = $"Erreur lors de la création : {ex.Message}";
+                TempData["ErrorMessage"] = "Erreur critique lors de la suppression : " + ex.Message;
             }
+
+            return RedirectToAction(nameof(ActiveUsers));
         }
 
-        return RedirectToAction(nameof(CreateUser));
-    }
-
-    // ============================================================
-    // 4️⃣ GESTION DES UTILISATEURS ACTIFS (RESTORED)
-    // ============================================================
-
-    // GET: Admin/UsersList - Affiche la liste de tous les utilisateurs actifs
-    public async Task<IActionResult> UsersList()
-    {
-        var users = await _context.Utilisateurs
-            .Where(u => u.Role != "Admin" && u.IsApproved == true)
-            .OrderBy(u => u.Role)
-            .ThenBy(u => u.NomUtilisateur)
-            .ToListAsync();
-
-        return View(users);
-    }
-
-    // POST : Logique de suppression d'un utilisateur ACTIF
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteUser(int id)
-    {
-        var user = await _context.Utilisateurs.FindAsync(id);
-
-        if (user == null || user.Role == "Admin")
+        // ============================================================
+        // 🧩 HELPERS (Avec correction BUG SUPPRESSION)
+        // ============================================================
+        private async Task CreateSpecificProfile(Utilisateur user, string role)
         {
-            TempData["ErrorMessage"] = "Utilisateur introuvable ou suppression non autorisée (Admin).";
-            return RedirectToAction(nameof(UsersList));
+            switch (role)
+            {
+                case "Etudiant":
+                    _context.Etudiants.Add(new Etudiant { UtilisateurId = user.Id, Nom = user.Nom, Prenom = user.Prenom, Email = user.Email });
+                    break;
+                case "Enseignant":
+                    _context.Enseignants.Add(new Enseignant { UtilisateurId = user.Id });
+                    break;
+                case "Surveillant":
+                    _context.Surveillants.Add(new Surveillant { UtilisateurId = user.Id });
+                    break;
+            }
+            await Task.CompletedTask;
         }
 
-        await DeleteSpecificProfile(user, user.Role);
-
-        _context.Utilisateurs.Remove(user);
-        await _context.SaveChangesAsync();
-
-        TempData["SuccessMessage"] = $"L'utilisateur actif {user.NomUtilisateur} ({user.Role}) a été supprimé définitivement.";
-        return RedirectToAction(nameof(UsersList));
-    }
-
-    // ============================================================
-    // 🧩 HELPERS
-    // ============================================================
-
-    private async Task CreateSpecificProfile(Utilisateur user, string role)
-    {
-        switch (role)
+        // 🔥 C'EST ICI QUE LA CORRECTION A ÉTÉ FAITE
+        private async Task DeleteSpecificProfile(Utilisateur user, string role)
         {
-            case "Etudiant":
-                _context.Etudiants.Add(new Etudiant
-                {
-                    UtilisateurId = user.Id,
-                    Nom = user.Nom,
-                    Prenom = user.Prenom,
-                    Email = user.Email
-                });
-                break;
+            switch (role)
+            {
+                case "Etudiant":
+                    var e = await _context.Etudiants.FirstOrDefaultAsync(x => x.UtilisateurId == user.Id);
+                    if (e != null) _context.Etudiants.Remove(e);
+                    break;
 
-            case "Enseignant":
-                _context.Enseignants.Add(new Enseignant
-                {
-                    UtilisateurId = user.Id
-                });
-                break;
+                case "Enseignant":
+                    var ens = await _context.Enseignants.FirstOrDefaultAsync(x => x.UtilisateurId == user.Id);
+                    if (ens != null) _context.Enseignants.Remove(ens);
+                    break;
 
-            case "Surveillant":
-                _context.Surveillants.Add(new Surveillant
-                {
-                    UtilisateurId = user.Id
-                });
-                break;
+                case "Surveillant":
+                    var s = await _context.Surveillants.FirstOrDefaultAsync(x => x.UtilisateurId == user.Id);
+                    if (s != null)
+                    {
+                        // Récupérer les groupes
+                        var groupes = await _context.Groupes.Where(g => g.SurveillantId == s.Id).ToListAsync();
+
+                        // AU LIEU DE METTRE NULL, ON SUPPRIME LES GROUPES
+                        if (groupes.Any())
+                        {
+                            _context.Groupes.RemoveRange(groupes); // Suppression radicale
+                        }
+
+                        await _context.SaveChangesAsync(); // Valider la suppression des groupes
+
+                        // Maintenant on peut supprimer le surveillant
+                        _context.Surveillants.Remove(s);
+                    }
+                    break;
+            }
+            await Task.CompletedTask;
         }
+        // ============================================================
+        // 5️⃣ GESTION DES COURS (MATIÈRES)
+        // ============================================================
 
-        await Task.CompletedTask;
-    }
-
-    private async Task DeleteSpecificProfile(Utilisateur user, string role)
-    {
-        switch (role)
+        // AFFICHER LA LISTE DES COURS
+        public async Task<IActionResult> ManageCourses()
         {
-            case "Etudiant":
-                var etudiant = await _context.Etudiants.FirstOrDefaultAsync(e => e.UtilisateurId == user.Id);
-                if (etudiant != null) _context.Etudiants.Remove(etudiant);
-                break;
-            case "Enseignant":
-                var enseignant = await _context.Enseignants.FirstOrDefaultAsync(e => e.UtilisateurId == user.Id);
-                if (enseignant != null) _context.Enseignants.Remove(enseignant);
-                break;
-            case "Surveillant":
-                var surveillant = await _context.Surveillants.FirstOrDefaultAsync(s => s.UtilisateurId == user.Id);
-                if (surveillant != null) _context.Surveillants.Remove(surveillant);
-                break;
+            var courses = await _context.Cours
+                .Include(c => c.Enseignant)
+                .ThenInclude(e => e.Utilisateur) // Pour récupérer le Nom/Prénom du prof
+                .OrderBy(c => c.Titre)
+                .ToListAsync();
+
+            return View(courses);
         }
-        await Task.CompletedTask;
+
+        // CRÉER UN COURS (GET)
+        [HttpGet]
+        public async Task<IActionResult> CreateCourse()
+        {
+            // On charge la liste des enseignants VALIDÉS pour le menu déroulant
+            var teachers = await _context.Enseignants
+                .Include(e => e.Utilisateur)
+                .Where(e => e.Utilisateur.IsApproved == true)
+                .Select(e => new
+                {
+                    Id = e.Id,
+                    NomComplet = $"{e.Utilisateur.Nom} {e.Utilisateur.Prenom}"
+                })
+                .ToListAsync();
+
+            ViewBag.Teachers = new SelectList(teachers, "Id", "NomComplet");
+            return View();
+        }
+
+        // CRÉER UN COURS (POST)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateCourse(Cours model)
+        {
+            // On enlève les validations inutiles pour ce formulaire
+            ModelState.Remove("Enseignant");
+            ModelState.Remove("EmploisDuTemps");
+            ModelState.Remove("Notes");
+
+            if (ModelState.IsValid)
+            {
+                _context.Cours.Add(model);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"Le cours '{model.Titre}' a été créé avec succès.";
+                return RedirectToAction(nameof(ManageCourses));
+            }
+
+            // Si erreur, on recharge la liste des profs pour ne pas casser la vue
+            var teachers = await _context.Enseignants
+                .Include(e => e.Utilisateur)
+                .Where(e => e.Utilisateur.IsApproved == true)
+                .Select(e => new
+                {
+                    Id = e.Id,
+                    NomComplet = $"{e.Utilisateur.Nom} {e.Utilisateur.Prenom}"
+                })
+                .ToListAsync();
+
+            ViewBag.Teachers = new SelectList(teachers, "Id", "NomComplet", model.EnseignantId);
+            return View(model);
+        }
+
+        // SUPPRIMER UN COURS
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteCourse(int id)
+        {
+            var course = await _context.Cours.FindAsync(id);
+            if (course != null)
+            {
+                // Attention : Si le cours est utilisé dans un Emploi du temps ou des Notes, 
+                // cela peut provoquer une erreur de clé étrangère.
+                try
+                {
+                    _context.Cours.Remove(course);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Cours supprimé.";
+                }
+                catch
+                {
+                    TempData["ErrorMessage"] = "Impossible de supprimer ce cours car il est lié à des emplois du temps ou des notes.";
+                }
+            }
+            return RedirectToAction(nameof(ManageCourses));
+        }
     }
 }

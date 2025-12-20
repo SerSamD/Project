@@ -1,0 +1,42 @@
+﻿@{
+    ViewData["Title"] = "Espace Enseignant";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary">Bienvenue, Professeur</h1>
+        <p class="lead text-muted">Gérez vos cours et vos évaluations depuis cet espace.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow border-0 h-100 text-center">
+                <div class="card-body p-5">
+                    <div class="mb-4 text-primary">
+                        <i class="fas fa-calendar-alt fa-4x"></i>
+                    </div>
+                    <h3 class="fw-bold">Mon Planning</h3>
+                    <p class="text-muted mb-4">Consultez vos horaires de cours, vos salles et vos groupes.</p>
+                    <a asp-controller="Enseignant" asp-action="MySchedule" class="btn btn-primary btn-lg rounded-pill px-4">
+                        Voir mon planning
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow border-0 h-100 text-center">
+                <div class="card-body p-5">
+                    <div class="mb-4 text-success">
+                        <i class="fas fa-marker fa-4x"></i>
+                    </div>
+                    <h3 class="fw-bold">Saisie des Notes</h3>
+                    <p class="text-muted mb-4">Évaluez vos étudiants et enregistrez les notes par matière.</p>
+                    <a asp-controller="Enseignant" asp-action="ManageGrades" class="btn btn-success btn-lg rounded-pill px-4">
+                        Saisir des notes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

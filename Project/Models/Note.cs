@@ -30,5 +30,7 @@ namespace Project.Models
         public string TypeEvaluation { get; set; }
 
         public DateTime DateNote { get; set; } = DateTime.Now; // Date par défaut
+
+        public bool IsPublished { get; set; } = false; // Par défaut, c'est caché
     }
 }

@@ -1,4 +1,5 @@
 ﻿@model Project.ViewModels.AdminDashboardViewModel
+
 @{
     ViewData["Title"] = "Tableau de Bord Administrateur";
 }
@@ -88,7 +89,9 @@
                 <h6 class="m-0 font-weight-bold text-primary">Inscriptions par Mois (Simulation)</h6>
             </div>
             <div class="card-body">
-                <p>--- Espace réservé pour le graphique des Inscriptions ---</p>
+                <div class="chart-area">
+                    <canvas id="myChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -128,3 +131,101 @@
 
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Récupération du contexte du canvas
+            var ctx = document.getElementById('myChart').getContext('2d');
+
+            // Récupération des données envoyées par le contrôleur (AdminController)
+            // Assurez-vous que ChartLabels et ChartValues sont bien dans votre ViewModel
+            var labels = @Html.Raw(Json.Serialize(Model.ChartLabels));
+            var data = @Html.Raw(Json.Serialize(Model.ChartValues));
+
+            // Création du graphique
+            var myChart = new Chart(ctx, {
+                type: 'line', // Type de graphique : ligne (courbe)
+                data: {
+                    labels: labels, // Les mois (Jan, Fév...)
+                    datasets: [{
+                        label: 'Nouvelles Inscriptions',
+                        data: data, // Les chiffres (12, 19...)
+                        backgroundColor: 'rgba(78, 115, 223, 0.05)', // Bleu très clair pour le fond
+                        borderColor: 'rgba(78, 115, 223, 1)',       // Bleu "Primary" pour la ligne
+                        pointRadius: 3,
+                        pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                        pointBorderColor: "rgba(78, 115, 223, 1)",
+                        pointHoverRadius: 3,
+                        pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                        pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                        pointHitRadius: 10,
+                        pointBorderWidth: 2,
+                        tension: 0.3, // Courbure de la ligne (plus joli)
+                        fill: true    // Remplir sous la courbe
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 25,
+                            top: 25,
+                            bottom: 0
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                maxTicksLimit: 7
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                maxTicksLimit: 5,
+                                padding: 10,
+                                callback: function(value, index, values) {
+                                    return value; // Afficher les nombres simplement
+                                }
+                            },
+                            grid: {
+                                color: "rgb(234, 236, 244)",
+                                zeroLineColor: "rgb(234, 236, 244)",
+                                drawBorder: false,
+                                borderDash: [2],
+                                zeroLineBorderDash: [2]
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false // Masquer la légende par défaut pour un look épuré
+                        },
+                        tooltip: {
+                            backgroundColor: "rgb(255,255,255)",
+                            bodyColor: "#858796",
+                            titleMarginBottom: 10,
+                            titleColor: '#6e707e',
+                            titleFont: { size: 14 },
+                            borderColor: '#dddfeb',
+                            borderWidth: 1,
+                            xPadding: 15,
+                            yPadding: 15,
+                            displayColors: false,
+                            intersect: false,
+                            mode: 'index',
+                            caretPadding: 10,
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

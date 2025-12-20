@@ -1,0 +1,56 @@
+﻿@model IEnumerable<Project.Models.Note>
+
+@{
+    ViewData["Title"] = "Mes Notes";
+}
+
+<h2 class="mb-4">Mes Résultats Scolaires</h2>
+
+<div class="alert alert-light border shadow-sm mb-4">
+    <i class="fas fa-info-circle text-info me-2"></i>
+    Seules les notes validées et publiées par l'administration apparaissent ici.
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5 text-muted">
+        <i class="fas fa-folder-open fa-3x mb-3"></i>
+        <h4>Aucune note publiée pour le moment.</h4>
+    </div>
+}
+else
+{
+    <div class="card shadow border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Matière</th>
+                        <th>Type</th>
+                        <th class="text-center">Note / 20</th>
+                        <th class="text-end pe-4">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold">@item.Cours?.Titre</td>
+                            <td><span class="badge bg-light text-dark border">@item.TypeEvaluation</span></td>
+
+                            <td class="text-center">
+                                <span class="fw-bold fs-5 @(item.Valeur >= 10 ? "text-success" : "text-danger")">
+                                    @item.Valeur.ToString("0.##")
+                                </span>
+                            </td>
+
+                            <td class="text-end pe-4 text-muted small">
+                                @item.DateNote.ToString("dd/MM/yyyy")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

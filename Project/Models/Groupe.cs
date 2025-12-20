@@ -12,8 +12,8 @@ namespace Project.Models
         public string Nom { get; set; }
 
         // Clé étrangère vers le Surveillant responsable
-        public int SurveillantId { get; set; }
-        public Surveillant Surveillant { get; set; }
+        public int? SurveillantId { get; set; }
+        public Surveillant? Surveillant { get; set; }
 
         // Navigation : Liste des étudiants dans ce groupe
         public ICollection<Etudiant> Etudiants { get; set; }

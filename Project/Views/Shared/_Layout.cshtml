@@ -5,57 +5,309 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MonApplication</title>
 
-    <!-- Favicon -->
     <link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon" />
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-..." crossorigin="anonymous">
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-    <!-- Styles spécifiques -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="~/css/site.css" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm mb-4">
-            <div class="container">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">MonApplication</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+    <style>
+        /* Style Sidebar commun */
+        .sidebar {
+            min-height: 100vh;
+            background-color: #212529; /* Fond sombre */
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+        }
+
+            .sidebar .nav-link {
+                color: rgba(255, 255, 255, .75);
+                padding: .75rem 1rem;
+                margin-bottom: 0.2rem;
+            }
+
+                .sidebar .nav-link:hover {
+                    color: #fff;
+                    background-color: rgba(255, 255, 255, .1);
+                    border-radius: 5px;
+                }
+
+                .sidebar .nav-link.active {
+                    color: #fff;
+                    background-color: #0d6efd; /* Bleu Bootstrap */
+                    border-radius: 5px;
+                }
+
+        .sidebar-heading {
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, .5);
+        }
+    </style>
+</head>
+
+@{
+        var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+        var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+
+        // 1. Détection ADMIN
+        var adminControllers = new[] { "Admin" };
+        bool isAdminPanel = User.Identity.IsAuthenticated && adminControllers.Contains(currentController);
+
+        // 2. Détection SURVEILLANT
+        var surveillantControllers = new[] { "Surveillant" };
+        bool isSurveillantPanel = User.Identity.IsAuthenticated && surveillantControllers.Contains(currentController);
+
+        // 3. Détection ENSEIGNANT
+        var enseignantControllers = new[] { "Enseignant" };
+        bool isEnseignantPanel = User.Identity.IsAuthenticated && enseignantControllers.Contains(currentController);
+
+        // 4. Détection ÉTUDIANT (NOUVEAU)
+        var etudiantControllers = new[] { "Etudiant" };
+        bool isEtudiantPanel = User.Identity.IsAuthenticated && etudiantControllers.Contains(currentController);
+
+        // Est-ce un panel spécial ?
+        bool isSpecialPanel = isAdminPanel || isSurveillantPanel || isEnseignantPanel || isEtudiantPanel;
+
+        // Titre dynamique du header
+        string panelTitle = "";
+        if (isAdminPanel) { panelTitle = "Espace Administrateur"; }
+        else if (isSurveillantPanel) { panelTitle = "Espace Surveillant"; }
+        else if (isEnseignantPanel) { panelTitle = "Espace Professeur"; }
+        else if (isEtudiantPanel) { panelTitle = "Espace Étudiant"; }
+}
+
+<body class="@(!User.Identity.IsAuthenticated ? "bg-light" : "")">
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm @(isSpecialPanel ? "border-bottom mb-0" : "mb-4")">
+                <div class="@(isSpecialPanel ? "container-fluid" : "container")">
+
+                    @if (!isSpecialPanel)
+                    {
+                        <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">MonApplication</a>
+                    }
+                    else
+                    {
+                        <span class="navbar-brand mb-0 h1">
+                            @panelTitle
+                        </span>
+                    }
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse">
+                        <ul class="navbar-nav ms-auto">
+                            @if (!isSpecialPanel)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Home" asp-action="Index">Accueil</a>
+                                </li>
+                            }
+
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    <button class="btn btn-link nav-link text-danger">Déconnexion</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+    }
+
+    @if (isAdminPanel)
+    {
+        // ==========================
+        // LAYOUT ADMIN
+        // ==========================
+        <div class="container-fluid">
+            <div class="row">
+                <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse px-0 pt-3">
+                    <h6 class="sidebar-heading px-3 mt-2 mb-2">Vue d'ensemble</h6>
+                    <ul class="nav flex-column px-2">
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">Accueil</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Account" asp-action="Login">Connexion</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Account" asp-action="Register">Inscription</a>
+                            <a class="nav-link @(currentAction == "Index" ? "active" : "")" asp-controller="Admin" asp-action="Index">
+                                <i class="fa-solid fa-gauge-high me-2"></i> Tableau de bord
+                            </a>
                         </li>
                     </ul>
-                </div>
+
+                    <h6 class="sidebar-heading px-3 mt-4 mb-2">Gestion Utilisateurs</h6>
+                    <ul class="nav flex-column px-2">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "ActiveUsers" ? "active" : "")" asp-controller="Admin" asp-action="ActiveUsers">
+                                <i class="fa-solid fa-user-check me-2"></i> Utilisateurs Actifs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "PendingUsers" ? "active" : "")" asp-controller="Admin" asp-action="PendingUsers">
+                                <i class="fa-solid fa-user-clock me-2"></i> En attente
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "CreateUser" ? "active" : "")" asp-controller="Admin" asp-action="CreateUser">
+                                <i class="fa-solid fa-user-plus me-2"></i> Créer utilisateur
+                            </a>
+                        </li>
+                    </ul>
+
+                    <h6 class="sidebar-heading px-3 mt-4 mb-2">Pédagogie</h6>
+                    <ul class="nav flex-column px-2">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "ManageCourses" ? "active" : "")" asp-controller="Admin" asp-action="ManageCourses">
+                                <i class="fa-solid fa-book-open me-2"></i> Gestion des Cours
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4 bg-light" style="min-height: 100vh;">
+                    @RenderBody()
+                </main>
             </div>
-        </nav>
-    </header>
+        </div>
+    }
+    else if (isSurveillantPanel)
+    {
+        // ==========================
+        // LAYOUT SURVEILLANT
+        // ==========================
+        <div class="container-fluid">
+            <div class="row">
+                <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse px-0 pt-3">
+                    <h6 class="sidebar-heading px-3 mt-2 mb-2">Mon Espace</h6>
+                    <ul class="nav flex-column px-2">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "Index" ? "active" : "")" asp-controller="Surveillant" asp-action="Index">
+                                <i class="fa-solid fa-house me-2"></i> Vue d'ensemble
+                            </a>
+                        </li>
+                    </ul>
 
-    <main class="container">
-        @RenderBody()
-    </main>
+                    <h6 class="sidebar-heading px-3 mt-4 mb-2">Gestion Scolaire</h6>
+                    <ul class="nav flex-column px-2">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "ManageGroups" ? "active" : "")" asp-controller="Surveillant" asp-action="ManageGroups">
+                                <i class="fa-solid fa-users-rectangle me-2"></i> Mes Groupes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "AssignStudents" ? "active" : "")" asp-controller="Surveillant" asp-action="AssignStudents">
+                                <i class="fa-solid fa-user-plus me-2"></i> Inscriptions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "ManageSchedule" ? "active" : "")" asp-controller="Surveillant" asp-action="ManageSchedule">
+                                <i class="fa-solid fa-calendar-days me-2"></i> Planning
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "ConsultGrades" ? "active" : "")" asp-controller="Surveillant" asp-action="ConsultGrades">
+                                <i class="fa-solid fa-clipboard-check me-2"></i> Publication Notes
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
 
-    <footer class="bg-light text-center text-muted py-3 mt-4 shadow-sm">
-        &copy; @DateTime.Now.Year - MonApplication
-    </footer>
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4 bg-light" style="min-height: 100vh;">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+    }
+    else if (isEnseignantPanel)
+    {
+        // ==========================
+        // LAYOUT ENSEIGNANT
+        // ==========================
+        <div class="container-fluid">
+            <div class="row">
+                <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse px-0 pt-3">
 
-    <!-- Scripts JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+                    <h6 class="sidebar-heading px-3 mt-2 mb-2">Espace Professeur</h6>
+                    <ul class="nav flex-column px-2">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "Index" ? "active" : "")" asp-controller="Enseignant" asp-action="Index">
+                                <i class="fa-solid fa-chalkboard-user me-2"></i> Accueil
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "MySchedule" ? "active" : "")" asp-controller="Enseignant" asp-action="MySchedule">
+                                <i class="fa-solid fa-calendar-week me-2"></i> Mon Planning
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "ManageGrades" ? "active" : "")" asp-controller="Enseignant" asp-action="ManageGrades">
+                                <i class="fa-solid fa-marker me-2"></i> Saisie des Notes
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
 
-    <!-- Section Scripts pour chaque vue -->
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4 bg-light" style="min-height: 100vh;">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+    }
+    else if (isEtudiantPanel)
+    {
+        // ==========================
+        // LAYOUT ÉTUDIANT (NOUVEAU)
+        // ==========================
+        <div class="container-fluid">
+            <div class="row">
+                <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse px-0 pt-3">
+
+                    <h6 class="sidebar-heading px-3 mt-2 mb-2">Mon Espace</h6>
+                    <ul class="nav flex-column px-2">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "Index" ? "active" : "")" asp-controller="Etudiant" asp-action="Index">
+                                <i class="fa-solid fa-user-graduate me-2"></i> Accueil
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "MySchedule" ? "active" : "")" asp-controller="Etudiant" asp-action="MySchedule">
+                                <i class="fa-solid fa-calendar-days me-2"></i> Mon Planning
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "MyGrades" ? "active" : "")" asp-controller="Etudiant" asp-action="MyGrades">
+                                <i class="fa-solid fa-medal me-2"></i> Mes Notes
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4 bg-light" style="min-height: 100vh;">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+    }
+    else
+    {
+        // ==========================
+        // LAYOUT STANDARD
+        // ==========================
+        <main class="@(User.Identity.IsAuthenticated ? "container" : "container-fluid p-0")">
+            @RenderBody()
+        </main>
+    }
+
+    @if (User.Identity.IsAuthenticated && !isSpecialPanel)
+    {
+        <footer class="bg-light text-center text-muted py-3 mt-4">
+            &copy; @DateTime.Now.Year - MonApplication
+        </footer>
+    }
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

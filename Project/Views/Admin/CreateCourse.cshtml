@@ -1,0 +1,44 @@
+﻿@model Project.Models.Cours
+
+@{
+    ViewData["Title"] = "Créer un Cours";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Ajouter une nouvelle matière</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="CreateCourse" method="post">
+
+                    <div class="mb-3">
+                        <label asp-for="Titre" class="form-label fw-bold">Titre du cours</label>
+                        <input asp-for="Titre" class="form-control" placeholder="Ex: Mathématiques Avancées" required />
+                        <span asp-validation-for="Titre" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Description du programme..."></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="EnseignantId" class="form-label fw-bold">Enseignant Responsable</label>
+                        <select asp-for="EnseignantId" asp-items="ViewBag.Teachers" class="form-select" required>
+                            <option value="">-- Sélectionner un enseignant --</option>
+                        </select>
+                        <span asp-validation-for="EnseignantId" class="text-danger"></span>
+                        <small class="text-muted d-block mt-1">Un enseignant est obligatoire pour créer un cours.</small>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">Enregistrer le Cours</button>
+                        <a asp-action="ManageCourses" class="btn btn-light">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

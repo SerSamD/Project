@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Project.Data;
 
@@ -11,9 +12,11 @@ using Project.Data;
 namespace Project.Migrations
 {
     [DbContext(typeof(SchoolContext))]
-    partial class SchoolContextModelSnapshot : ModelSnapshot
+    [Migration("20251220112330_RendreSurveillantOptionnel")]
+    partial class RendreSurveillantOptionnel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,32 @@ namespace Project.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+
+            modelBuilder.Entity("Cours", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("EnseignantId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Titre")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnseignantId");
+
+                    b.ToTable("Cours");
+                });
 
             modelBuilder.Entity("Enseignant", b =>
                 {
@@ -39,31 +68,6 @@ namespace Project.Migrations
                         .IsUnique();
 
                     b.ToTable("Enseignants");
-                });
-
-            modelBuilder.Entity("Project.Models.Cours", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("EnseignantId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Titre")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EnseignantId");
-
-                    b.ToTable("Cours");
                 });
 
             modelBuilder.Entity("Project.Models.EmploiDuTemps", b =>
@@ -179,9 +183,6 @@ namespace Project.Migrations
                     b.Property<int>("EtudiantId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsPublished")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("TypeEvaluation")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -273,6 +274,17 @@ namespace Project.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Cours", b =>
+                {
+                    b.HasOne("Enseignant", "Enseignant")
+                        .WithMany("Cours")
+                        .HasForeignKey("EnseignantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Enseignant");
+                });
+
             modelBuilder.Entity("Enseignant", b =>
                 {
                     b.HasOne("Project.Models.Utilisateur", "Utilisateur")
@@ -284,20 +296,9 @@ namespace Project.Migrations
                     b.Navigation("Utilisateur");
                 });
 
-            modelBuilder.Entity("Project.Models.Cours", b =>
-                {
-                    b.HasOne("Enseignant", "Enseignant")
-                        .WithMany("Cours")
-                        .HasForeignKey("EnseignantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Enseignant");
-                });
-
             modelBuilder.Entity("Project.Models.EmploiDuTemps", b =>
                 {
-                    b.HasOne("Project.Models.Cours", "Cours")
+                    b.HasOne("Cours", "Cours")
                         .WithMany("EmploisDuTemps")
                         .HasForeignKey("CoursId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -351,7 +352,7 @@ namespace Project.Migrations
 
             modelBuilder.Entity("Project.Models.Note", b =>
                 {
-                    b.HasOne("Project.Models.Cours", "Cours")
+                    b.HasOne("Cours", "Cours")
                         .WithMany("Notes")
                         .HasForeignKey("CoursId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -379,16 +380,16 @@ namespace Project.Migrations
                     b.Navigation("Utilisateur");
                 });
 
-            modelBuilder.Entity("Enseignant", b =>
-                {
-                    b.Navigation("Cours");
-                });
-
-            modelBuilder.Entity("Project.Models.Cours", b =>
+            modelBuilder.Entity("Cours", b =>
                 {
                     b.Navigation("EmploisDuTemps");
 
                     b.Navigation("Notes");
+                });
+
+            modelBuilder.Entity("Enseignant", b =>
+                {
+                    b.Navigation("Cours");
                 });
 
             modelBuilder.Entity("Project.Models.Etudiant", b =>

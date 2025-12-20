@@ -1,0 +1,42 @@
+﻿@model IEnumerable<Project.Models.EmploiDuTemps>
+
+@{
+    ViewData["Title"] = "Mon Emploi du Temps";
+}
+
+<h2 class="mb-4">Mon Planning</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Aucun cours planifié pour le moment.</div>
+}
+else
+{
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0 align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Jour</th>
+                            <th>Horaire</th>
+                            <th>Groupe</th>
+                            <th>Matière</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><span class="badge bg-primary">@item.Jour</span></td>
+                                <td>@item.HeureDebut.ToString(@"hh\:mm") - @item.HeureFin.ToString(@"hh\:mm")</td>
+                                <td class="fw-bold">@item.Groupe?.Nom</td>
+                                <td>@item.Cours?.Titre</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

@@ -1,46 +1,62 @@
 ﻿@model Project.ViewModels.LoginViewModel
+
 @{
     ViewData["Title"] = "Connexion";
+    Layout = "_Layout"; // Utilise le layout standard sans sidebar
 }
 
-<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card shadow-lg border-0 rounded-4 w-100" style="max-width: 400px;">
-        <div class="card-body p-5">
-            <!-- Icône + titre -->
-            <div class="text-center mb-4">
-                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
-                    <i class="fas fa-sign-in-alt fa-2x"></i>
+<div class="container">
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5 text-center">
+
+                    <div class="mb-4">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex p-3 mb-3">
+                            <i class="fas fa-right-to-bracket fa-2x"></i>
+                        </div>
+                        <h2 class="fw-bold">Connexion</h2>
+                        <p class="text-muted">
+                            Entrez vos identifiants pour accéder à la plateforme
+                        </p>
+                    </div>
+
+                    <form asp-action="Login" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger text-start" role="alert"></div>
+                        <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                        <div class="form-floating mb-3 text-start">
+                            <input asp-for="NomUtilisateur" class="form-control" placeholder="Nom d'utilisateur" />
+                            <label asp-for="NomUtilisateur">Nom d'utilisateur</label>
+                            <span asp-validation-for="NomUtilisateur" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-4 text-start">
+                            <input asp-for="MotDePasse" type="password" class="form-control" placeholder="Mot de passe" />
+                            <label asp-for="MotDePasse">Mot de passe</label>
+                            <span asp-validation-for="MotDePasse" class="text-danger small"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fs-5 fw-bold rounded-pill">
+                            Se connecter
+                        </button>
+                    </form>
+
+                    <div class="mt-4 text-muted">
+                        <span>Pas encore de compte ?</span>
+                        <a asp-action="Register" class="text-primary fw-bold text-decoration-none ms-1">
+                            Créer un compte
+                        </a>
+                    </div>
+
                 </div>
-                <h2 class="fw-bold text-dark">Connexion</h2>
-                <p class="text-muted">Entrez vos identifiants pour accéder à la plateforme</p>
             </div>
-
-            <form asp-action="Login" method="post" class="needs-validation" novalidate>
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                <div class="mb-3">
-                    <label asp-for="NomUtilisateur" class="form-label fw-bold small text-secondary">Nom d'utilisateur</label>
-                    <input asp-for="NomUtilisateur" class="form-control form-control-lg bg-light border-0" placeholder="Ex: user123" autocomplete="username" />
-                    <span asp-validation-for="NomUtilisateur" class="text-danger small"></span>
-                </div>
-
-                <div class="mb-4">
-                    <label asp-for="MotDePasse" class="form-label fw-bold small text-secondary">Mot de passe</label>
-                    <input asp-for="MotDePasse" type="password" class="form-control form-control-lg bg-light border-0" autocomplete="current-password" />
-                    <span asp-validation-for="MotDePasse" class="text-danger small"></span>
-                </div>
-
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm">Se connecter</button>
-                    <a asp-action="Register" class="btn btn-outline-success mt-2 border-0">
-                        <i class="fas fa-user-plus me-1"></i> Créer un compte
-                    </a>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
