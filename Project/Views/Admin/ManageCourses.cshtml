@@ -1,66 +1,100 @@
 ﻿@model IEnumerable<Project.Models.Cours>
 
 @{
-    ViewData["Title"] = "Gestion des Cours";
+    ViewData["Title"] = "Gestion des Matières";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Gestion des Matières</h2>
-    <a asp-action="CreateCourse" class="btn btn-primary">
-        <i class="fas fa-plus me-2"></i>Nouveau Cours
+    <h2 class="text-dark fw-bold">Gestion des Matières</h2>
+    <a asp-action="CreateCourse" class="btn btn-primary rounded-pill">
+        <i class="fas fa-plus me-2"></i> Nouveau Cours
     </a>
 </div>
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Titre</th>
-                    <th>Description</th>
-                    <th>Enseignant Responsable</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
+<div class="card shadow border-0 rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
                     <tr>
-                        <td class="fw-bold">@item.Titre</td>
-                        <td>@(item.Description ?? "-")</td>
-                        <td>
-                            @if (item.Enseignant != null && item.Enseignant.Utilisateur != null)
-                            {
-                                <span class="badge bg-info text-dark">
-                                    <i class="fas fa-chalkboard-teacher me-1"></i>
-                                    @item.Enseignant.Utilisateur.Nom @item.Enseignant.Utilisateur.Prenom
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="text-danger fw-bold">Non assigné (Erreur DB)</span>
-                            }
-                        </td>
-                        <td class="text-end">
-                            <form asp-action="DeleteCourse" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce cours ?');">
-                                <input type="hidden" name="id" value="@item.Id" />
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="fas fa-trash"></i> Supprimer
-                                </button>
-                            </form>
-                        </td>
+                        <th class="ps-4 py-3">Titre</th>
+                        <th class="py-3">Description</th>
+                        <th class="py-3">Enseignant Responsable</th>
+                        <th class="text-end pe-4 py-3" style="width: 150px;">Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold text-primary">@item.Titre</td>
+                            <td class="text-muted small">
+                                @if (!string.IsNullOrEmpty(item.Description))
+                                {
+                                    @(item.Description.Length > 50 ? item.Description.Substring(0, 50) + "..." : item.Description)
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Aucune description</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.Enseignant != null && item.Enseignant.Utilisateur != null)
+                                {
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                            <span class="fw-bold small">@item.Enseignant.Utilisateur.Nom.Substring(0, 1)</span>
+                                        </div>
+                                        <span>@item.Enseignant.Utilisateur.Nom @item.Enseignant.Utilisateur.Prenom</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Non assigné</span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a asp-action="EditCourse" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    <form asp-action="DeleteCourse" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce cours ?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <i class="fas fa-book-open fa-3x mb-3 text-secondary opacity-50"></i>
+                                <p>Aucun cours n'a encore été créé.</p>
+                                <a asp-action="CreateCourse" class="btn btn-sm btn-primary">Créer le premier cours</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>

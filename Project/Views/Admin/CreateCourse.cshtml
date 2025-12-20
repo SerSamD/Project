@@ -5,37 +5,36 @@
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Ajouter une nouvelle matière</h5>
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow border-0 rounded-4 mt-4">
+            <div class="card-header bg-white py-3 border-bottom-0">
+                <h4 class="fw-bold text-primary mb-0"><i class="fas fa-plus-circle me-2"></i> Ajouter une Matière</h4>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 <form asp-action="CreateCourse" method="post">
-
                     <div class="mb-3">
                         <label asp-for="Titre" class="form-label fw-bold">Titre du cours</label>
-                        <input asp-for="Titre" class="form-control" placeholder="Ex: Mathématiques Avancées" required />
-                        <span asp-validation-for="Titre" class="text-danger"></span>
+                        <input asp-for="Titre" class="form-control" placeholder="Ex: Développement C#" />
+                        <span asp-validation-for="Titre" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Description" class="form-label">Description</label>
-                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Description du programme..."></textarea>
+                        <label asp-for="Description" class="form-label fw-bold">Description (Optionnel)</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Brève description du contenu..."></textarea>
                     </div>
 
                     <div class="mb-4">
                         <label asp-for="EnseignantId" class="form-label fw-bold">Enseignant Responsable</label>
-                        <select asp-for="EnseignantId" asp-items="ViewBag.Teachers" class="form-select" required>
-                            <option value="">-- Sélectionner un enseignant --</option>
+                        <select asp-for="EnseignantId" class="form-select" asp-items="ViewBag.Teachers">
+                            <option value="">-- Sélectionner un professeur --</option>
                         </select>
-                        <span asp-validation-for="EnseignantId" class="text-danger"></span>
-                        <small class="text-muted d-block mt-1">Un enseignant est obligatoire pour créer un cours.</small>
+                        <span asp-validation-for="EnseignantId" class="text-danger small"></span>
+                        <div class="form-text">Seuls les enseignants dont le compte est validé apparaissent ici.</div>
                     </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success">Enregistrer le Cours</button>
-                        <a asp-action="ManageCourses" class="btn btn-light">Annuler</a>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="ManageCourses" class="btn btn-light me-2">Annuler</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">Enregistrer</button>
                     </div>
                 </form>
             </div>
