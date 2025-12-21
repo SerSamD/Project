@@ -24,15 +24,15 @@ namespace Project.Controllers
         }
 
         // ============================================================
-        // 1️⃣ C'EST CETTE MÉTHODE QUI MANQUAIT PEUT-ÊTRE
+        // 1️⃣ ACCUEIL
         // ============================================================
         public IActionResult Index()
         {
-            return View(); // Cela va chercher Views/Enseignant/Index.cshtml
+            return View();
         }
 
         // ============================================================
-        // 2️⃣ MON EMPLOI DU TEMPS
+        // 2️⃣ MON EMPLOI DU TEMPS (MODIFIÉ POUR LA GRILLE)
         // ============================================================
         public async Task<IActionResult> MySchedule()
         {
@@ -44,12 +44,12 @@ namespace Project.Controllers
 
             if (enseignant == null) return Forbid();
 
+            // On récupère tout ce qu'il faut pour remplir la grille
             var mySchedule = await _context.EmploisDuTemps
                 .Where(e => e.EnseignantId == enseignant.Id)
-                .Include(e => e.Groupe)
-                .Include(e => e.Cours)
-                .OrderBy(e => e.Jour)
-                .ThenBy(e => e.HeureDebut)
+                .Include(e => e.Groupe) // Important : Pour afficher le groupe dans la case
+                .Include(e => e.Cours)  // Important : Pour afficher la matière
+                                        // .Include(e => e.Salle) // Décommentez si vous avez une table Salle liée
                 .ToListAsync();
 
             return View(mySchedule);

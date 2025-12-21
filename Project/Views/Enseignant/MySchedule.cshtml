@@ -1,37 +1,114 @@
-﻿@model IEnumerable<Project.Models.EmploiDuTemps>
+﻿@model List<Project.Models.EmploiDuTemps>
 
 @{
     ViewData["Title"] = "Mon Emploi du Temps";
+
+    // --- 1. DYNAMIQUE : On récupère les créneaux depuis les données ---
+    // On cherche toutes les heures de début uniques présentes dans la liste des cours
+    var uniqueStartTimes = Model
+        .Select(e => e.HeureDebut)
+        .Distinct()
+        .OrderBy(t => t)
+        .ToList();
+
+    // Si aucun cours n'existe, on met des créneaux par défaut pour ne pas afficher un tableau vide
+    if (!uniqueStartTimes.Any())
+    {
+        uniqueStartTimes = new List<TimeSpan>
+        {
+            new TimeSpan(8, 30, 0),
+            new TimeSpan(10, 30, 0),
+            new TimeSpan(14, 30, 0),
+            new TimeSpan(16, 30, 0)
+        };
+    }
+
+    var days = new List<string> { "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi" };
+
+    string NormalizeDay(string dbDay)
+    {
+        if (string.IsNullOrEmpty(dbDay)) return "";
+        var d = dbDay.Trim().ToLower();
+        if (d.Contains("mon") || d.Contains("lun")) return "Lundi";
+        if (d.Contains("tue") || d.Contains("mar")) return "Mardi";
+        if (d.Contains("wed") || d.Contains("mer")) return "Mercredi";
+        if (d.Contains("thu") || d.Contains("jeu")) return "Jeudi";
+        if (d.Contains("fri") || d.Contains("ven")) return "Vendredi";
+        if (d.Contains("sat") || d.Contains("sam")) return "Samedi";
+        return dbDay;
+    }
 }
 
-<h2 class="mb-4">Mon Planning</h2>
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark"><i class="fas fa-calendar-alt me-2 text-primary"></i>Mon Planning</h2>
+        </div>
+        <div class="badge bg-info text-dark px-3 py-2 fs-6">
+            @Model.Count() cours programmés
+        </div>
+    </div>
 
-@if (!Model.Any())
-{
-    <div class="alert alert-info">Aucun cours planifié pour le moment.</div>
-}
-else
-{
-    <div class="card shadow-sm border-0">
+    <div class="card shadow border-0">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0 align-middle">
-                    <thead class="table-dark">
+                <table class="table table-bordered text-center align-middle mb-0" style="min-width: 800px;">
+                    <thead class="bg-primary text-white">
                         <tr>
-                            <th>Jour</th>
-                            <th>Horaire</th>
-                            <th>Groupe</th>
-                            <th>Matière</th>
+                            <th style="width: 120px;" class="py-3 bg-dark text-white"><i class="far fa-clock"></i></th>
+                            @foreach (var day in days)
+                            {
+                                <th style="width: 15%;" class="py-3 text-uppercase small fw-bold">@day</th>
+                            }
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model)
+                        @foreach (var startTime in uniqueStartTimes)
                         {
+                            // On cherche la fin du cours pour l'affichage (ex: 08:30 - 10:30)
+                            // S'il n'y a pas de cours (cas liste par défaut), on ajoute 2h fictives
+                            var courseForTime = Model.FirstOrDefault(c => c.HeureDebut == startTime);
+                            var endTime = courseForTime != null ? courseForTime.HeureFin : startTime.Add(new TimeSpan(2, 0, 0));
+
+                            // Formatage de l'heure (hh:mm)
+                            string slotLabel = $"{startTime:hh\\:mm} - {endTime:hh\\:mm}";
+
                             <tr>
-                                <td><span class="badge bg-primary">@item.Jour</span></td>
-                                <td>@item.HeureDebut.ToString(@"hh\:mm") - @item.HeureFin.ToString(@"hh\:mm")</td>
-                                <td class="fw-bold">@item.Groupe?.Nom</td>
-                                <td>@item.Cours?.Titre</td>
+                                <td class="bg-light fw-bold text-secondary">@slotLabel</td>
+
+                                @foreach (var day in days)
+                                {
+                                    // COMPARAISON EXACTE SUR L'HEURE DE DÉBUT (TimeSpan)
+                                    // Plus besoin de manipuler des chaines de caractères
+                                    var course = Model.FirstOrDefault(c =>
+                                    NormalizeDay(c.Jour.ToString()) == day &&
+                                    c.HeureDebut == startTime
+                                    );
+
+                                    <td class="p-1 position-relative @(course != null ? "bg-primary bg-opacity-10" : "")">
+                                        @if (course != null)
+                                        {
+                                            <div class="card border-0 shadow-sm h-100" style="min-height: 80px; border-left: 4px solid #0d6efd !important;">
+                                                <div class="card-body p-2 d-flex flex-column justify-content-center">
+
+                                                    <h6 class="card-title text-primary fw-bold mb-1 small">
+                                                        @course.Cours?.Titre
+                                                    </h6>
+
+                                                    <div class="mb-1">
+                                                        <span class="badge bg-warning text-dark small">
+                                                            <i class="fas fa-users me-1"></i>@course.Groupe?.Nom
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted opacity-25 small">-</span>
+                                        }
+                                    </td>
+                                }
                             </tr>
                         }
                     </tbody>
@@ -39,4 +116,4 @@ else
             </div>
         </div>
     </div>
-}
+</div>

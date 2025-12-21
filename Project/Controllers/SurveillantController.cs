@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using Project.Data;
 
-namespace Project.Controllers // Assurez-vous que le namespace est correct
+namespace Project.Controllers
 {
     [Authorize(Roles = "Surveillant")]
     public class SurveillantController : Controller
@@ -80,12 +80,63 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
             return RedirectToAction(nameof(ManageGroups));
         }
 
+        // ============================================================
+        // 3️⃣ MODIFICATION DES GROUPES (GET & POST)
+        // ============================================================
+
+        // GET : Affiche le formulaire de modification
+        [HttpGet]
+        public async Task<IActionResult> EditGroup(int id)
+        {
+            var groupe = await _context.Groupes.FindAsync(id);
+            if (groupe == null)
+            {
+                return NotFound();
+            }
+            return View(groupe);
+        }
+
+        // POST : Enregistre les modifications
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditGroup(int id, Groupe model)
+        {
+            if (id != model.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var existingGroup = await _context.Groupes.FindAsync(id);
+                    if (existingGroup == null) return NotFound();
+
+                    // Mise à jour du nom uniquement
+                    existingGroup.Nom = model.Nom;
+
+                    _context.Update(existingGroup);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Le nom du groupe a été modifié avec succès.";
+                    return RedirectToAction(nameof(ManageGroups));
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.Groupes.Any(e => e.Id == id)) return NotFound();
+                    else throw;
+                }
+            }
+            return View(model);
+        }
 
         // ============================================================
-        // 3️⃣ ASSIGNATION DES ÉTUDIANTS AUX GROUPES
+        // 4️⃣ GESTION DES ÉTUDIANTS (ASSIGNATION & LISTE)
         // ============================================================
 
-        public async Task<IActionResult> AssignStudents()
+        // MODIFICATION : Ajout du paramètre groupId pour pré-sélectionner le groupe
+        public async Task<IActionResult> AssignStudents(int? groupId)
         {
             var unassignedStudents = await _context.Etudiants
              .Where(e => e.GroupeId == null)
@@ -104,7 +155,10 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
              .ToListAsync();
 
             ViewBag.Groups = groups;
+            // On passe l'ID du groupe pour la présélection dans la vue
+            ViewBag.PreselectedGroupId = groupId;
             ViewBag.SuccessMessage = TempData["SuccessMessage"];
+
             return View(unassignedStudents);
         }
 
@@ -121,12 +175,54 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = $"Étudiant assigné au groupe {group.Nom}.";
             }
-            return RedirectToAction(nameof(AssignStudents));
+            // On retourne à la page d'assignation pour en ajouter d'autres
+            return RedirectToAction(nameof(AssignStudents), new { groupId = groupId });
+        }
+
+        // Action pour voir la liste des étudiants d'un groupe (bouton Oeil)
+        public async Task<IActionResult> GroupStudents(int groupId)
+        {
+            var groupe = await _context.Groupes
+                .Include(g => g.Etudiants)
+                    .ThenInclude(e => e.Utilisateur)
+                .FirstOrDefaultAsync(g => g.Id == groupId);
+
+            if (groupe == null)
+            {
+                return NotFound();
+            }
+
+            return View(groupe);
+        }
+
+        // AJOUT : Retirer un étudiant d'un groupe (Bouton Corbeille)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveStudentFromGroup(int studentId)
+        {
+            var student = await _context.Etudiants.FindAsync(studentId);
+
+            if (student == null)
+            {
+                TempData["ErrorMessage"] = "Étudiant introuvable.";
+                return RedirectToAction(nameof(ManageGroups));
+            }
+
+            // On retire l'étudiant du groupe
+            student.GroupeId = null;
+
+            _context.Etudiants.Update(student);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Étudiant retiré du groupe avec succès.";
+
+            // On redirige vers la liste principale des groupes
+            return RedirectToAction(nameof(ManageGroups));
         }
 
 
         // ============================================================
-        // 4️⃣ GESTION DE L'EMPLOI DU TEMPS (CORRIGÉE & SÉCURISÉE)
+        // 5️⃣ GESTION DE L'EMPLOI DU TEMPS
         // ============================================================
 
         [HttpGet]
@@ -159,12 +255,9 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
             // 2. Initialiser le ViewModel
             var viewModel = new AddScheduleViewModel
             {
-                // Si groupId est null, on met 0, sinon l'ID
                 GroupeId = groupId ?? 0,
-
-                // On remplit les listes déroulantes (SelectLists)
                 Groupes = new SelectList(groupes, "Id", "Nom", groupId),
-                CoursList = new SelectList(cours, "Id", "Titre"), // Attention: Titre vs Nom selon votre modèle
+                CoursList = new SelectList(cours, "Id", "Titre"),
                 Enseignants = new SelectList(
                     enseignants.Select(e => new { e.Id, NomComplet = $"{e.Utilisateur.Prenom} {e.Utilisateur.Nom}" }),
                     "Id", "NomComplet"
@@ -175,13 +268,11 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
                 )
             };
 
-            // 3. Si un groupe est sélectionné, on charge son planning DANS le ViewModel
+            // 3. Charger le planning si un groupe est sélectionné
             if (groupId.HasValue && groupId.Value > 0)
             {
-                // Nom du groupe
                 viewModel.SelectedGroupName = groupes.FirstOrDefault(g => g.Id == groupId.Value)?.Nom;
 
-                // Liste des sessions
                 viewModel.ScheduleList = await _context.EmploisDuTemps
                     .Where(s => s.GroupeId == groupId.Value)
                     .Include(s => s.Cours)
@@ -192,60 +283,59 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
                     .ToListAsync();
             }
 
-            // Messages Flash
             ViewBag.SuccessMessage = TempData["SuccessMessage"];
             ViewBag.ErrorMessage = TempData["ErrorMessage"];
 
             return View(viewModel);
         }
 
+        // ============================================================
+        // 6️⃣ AJOUTER UNE SESSION (COURS)
+        // ============================================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddSession(AddScheduleViewModel model)
         {
-            // IMPORTANT : On retire les propriétés d'affichage de la validation
-            // car elles ne sont pas renvoyées par le formulaire POST.
             ModelState.Remove("Groupes");
             ModelState.Remove("CoursList");
             ModelState.Remove("Enseignants");
             ModelState.Remove("Jours");
-            ModelState.Remove("ScheduleList"); // Celle-ci causait souvent des problèmes si non retirée
+            ModelState.Remove("ScheduleList");
             ModelState.Remove("SelectedGroupName");
 
             if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Erreur de validation. Veuillez vérifier tous les champs.";
-                // En cas d'erreur, on recharge la page avec le même groupId
+                TempData["ErrorMessage"] = "Erreur de validation. Vérifiez les champs.";
                 return RedirectToAction(nameof(ManageSchedule), new { groupId = model.GroupeId });
             }
 
-            // 1. Vérifiez les chevauchements d'horaires pour le GROUPE
-            var groupOverlapExists = await _context.EmploisDuTemps
+            // Vérification chevauchement GROUPE
+            var groupOverlap = await _context.EmploisDuTemps
                 .AnyAsync(s => s.GroupeId == model.GroupeId &&
                                s.Jour == model.Jour &&
                                (model.HeureDebut < s.HeureFin) &&
                                (model.HeureFin > s.HeureDebut));
 
-            if (groupOverlapExists)
+            if (groupOverlap)
             {
-                TempData["ErrorMessage"] = "Conflit d'horaire pour le GROUPE! Une session est déjà planifiée à ce moment.";
+                TempData["ErrorMessage"] = "Conflit : Le groupe a déjà cours à cette heure.";
                 return RedirectToAction(nameof(ManageSchedule), new { groupId = model.GroupeId });
             }
 
-            // 2. Vérifiez les chevauchements d'horaires pour l'ENSEIGNANT
-            var teacherOverlapExists = await _context.EmploisDuTemps
+            // Vérification chevauchement ENSEIGNANT
+            var teacherOverlap = await _context.EmploisDuTemps
                 .AnyAsync(s => s.EnseignantId == model.EnseignantId &&
                                s.Jour == model.Jour &&
                                (model.HeureDebut < s.HeureFin) &&
                                (model.HeureFin > s.HeureDebut));
 
-            if (teacherOverlapExists)
+            if (teacherOverlap)
             {
-                TempData["ErrorMessage"] = "Conflit d'horaire pour l'ENSEIGNANT! L'enseignant est déjà assigné à une autre session à ce moment.";
+                TempData["ErrorMessage"] = "Conflit : L'enseignant a déjà cours à cette heure.";
                 return RedirectToAction(nameof(ManageSchedule), new { groupId = model.GroupeId });
             }
 
-            // 3. Créer la nouvelle session
             var newSession = new EmploiDuTemps
             {
                 GroupeId = model.GroupeId,
@@ -259,12 +349,77 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
             _context.EmploisDuTemps.Add(newSession);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = $"Session ajoutée le {newSession.Jour} de {newSession.HeureDebut:hh\\:mm} à {newSession.HeureFin:hh\\:mm}.";
+            TempData["SuccessMessage"] = "Session ajoutée avec succès.";
             return RedirectToAction(nameof(ManageSchedule), new { groupId = model.GroupeId });
         }
+
         // ============================================================
-        // 5️⃣ SUPPRESSION D'UNE SESSION
+        // 7️⃣ MODIFIER UNE SESSION (GET & POST)
         // ============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> EditSession(int id)
+        {
+            var session = await _context.EmploisDuTemps
+                .Include(e => e.Cours)
+                .Include(e => e.Enseignant).ThenInclude(en => en.Utilisateur)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (session == null) return NotFound();
+
+            // Rechargement des listes pour le formulaire
+            ViewBag.CoursId = new SelectList(_context.Cours, "Id", "Titre", session.CoursId);
+
+            var enseignants = _context.Enseignants
+                .Include(e => e.Utilisateur)
+                .Select(e => new { Id = e.Id, NomComplet = e.Utilisateur.Nom + " " + e.Utilisateur.Prenom });
+            ViewBag.EnseignantId = new SelectList(enseignants, "Id", "NomComplet", session.EnseignantId);
+
+            var jours = Enum.GetValues(typeof(DayOfWeek))
+                .Cast<DayOfWeek>()
+                .Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)
+                .Select(d => new { Id = d, Name = d.ToString() });
+            ViewBag.Jour = new SelectList(jours, "Id", "Name", session.Jour);
+
+            return View(session);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditSession(int id, EmploiDuTemps model)
+        {
+            if (id != model.Id) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(model);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Session modifiée avec succès.";
+                    return RedirectToAction(nameof(ManageSchedule), new { groupId = model.GroupeId });
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.EmploisDuTemps.Any(e => e.Id == model.Id)) return NotFound();
+                    else throw;
+                }
+            }
+
+            // En cas d'erreur, recharger les listes
+            ViewBag.CoursId = new SelectList(_context.Cours, "Id", "Titre", model.CoursId);
+            var enseignants = _context.Enseignants.Include(e => e.Utilisateur)
+                .Select(e => new { Id = e.Id, NomComplet = e.Utilisateur.Nom + " " + e.Utilisateur.Prenom });
+            ViewBag.EnseignantId = new SelectList(enseignants, "Id", "NomComplet", model.EnseignantId);
+
+            return View(model);
+        }
+
+
+        // ============================================================
+        // 8️⃣ SUPPRIMER UNE SESSION
+        // ============================================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteSession(int sessionId)
@@ -274,29 +429,26 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
             if (session == null)
             {
                 TempData["ErrorMessage"] = "Session introuvable.";
-                // On redirige vers la page de gestion sans ID spécifique si on ne trouve pas la session
                 return RedirectToAction(nameof(ManageSchedule));
             }
 
-            // On garde l'ID du groupe pour recharger le bon planning après suppression
             int groupId = session.GroupeId;
 
             _context.EmploisDuTemps.Remove(session);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Session supprimée avec succès.";
-
-            // Redirection vers le planning du groupe concerné
+            TempData["SuccessMessage"] = "Session supprimée.";
             return RedirectToAction(nameof(ManageSchedule), new { groupId = groupId });
         }
+
         // ============================================================
-        // 6️⃣ RÉINITIALISER TOUT LE PLANNING DU GROUPE
+        // 9️⃣ RÉINITIALISER TOUT LE PLANNING
         // ============================================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetSchedule(int groupId)
         {
-            // 1. On récupère toutes les sessions de ce groupe
             var sessions = await _context.EmploisDuTemps
                 .Where(s => s.GroupeId == groupId)
                 .ToListAsync();
@@ -307,23 +459,20 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
                 return RedirectToAction(nameof(ManageSchedule), new { groupId = groupId });
             }
 
-            // 2. Suppression de masse
             _context.EmploisDuTemps.RemoveRange(sessions);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "L'emploi du temps a été entièrement réinitialisé.";
-
-            // 3. Retour à la page
+            TempData["SuccessMessage"] = "Planning réinitialisé.";
             return RedirectToAction(nameof(ManageSchedule), new { groupId = groupId });
         }
+
         // ============================================================
-        // 7️⃣ CONSULTATION ET PUBLICATION DES NOTES
+        // 🔟 CONSULTATION ET PUBLICATION DES NOTES
         // ============================================================
 
         [HttpGet]
         public async Task<IActionResult> ConsultGrades(int? groupId, int? coursId)
         {
-            // 1. Charger les listes pour les filtres
             var supervisorUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var supervisor = await _context.Surveillants.FirstOrDefaultAsync(s => s.UtilisateurId == supervisorUserId);
 
@@ -341,7 +490,6 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
                 Cours = new SelectList(cours, "Id", "Titre", coursId)
             };
 
-            // 2. Si filtres sélectionnés, charger les notes
             if (groupId.HasValue && coursId.HasValue)
             {
                 var notes = await _context.Notes
@@ -350,7 +498,6 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
                     .Where(n => n.Etudiant.GroupeId == groupId.Value && n.CoursId == coursId.Value)
                     .ToListAsync();
 
-                // On vérifie si au moins une note est déjà publiée pour ce groupe/matière
                 ViewBag.AreNotesPublished = notes.Any(n => n.IsPublished);
 
                 foreach (var note in notes)
@@ -359,7 +506,7 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
                     {
                         EtudiantId = note.EtudiantId,
                         EtudiantNom = $"{note.Etudiant.Utilisateur.Nom} {note.Etudiant.Utilisateur.Prenom}",
-                        Note = (double)note.Valeur // Affichage seulement
+                        Note = (double)note.Valeur
                     });
                 }
             }
@@ -371,7 +518,6 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PublishGrades(int groupId, int coursId)
         {
-            // 1. Récupérer toutes les notes de ce groupe pour cette matière
             var notes = await _context.Notes
                 .Include(n => n.Etudiant)
                 .Where(n => n.Etudiant.GroupeId == groupId && n.CoursId == coursId)
@@ -379,11 +525,10 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
 
             if (!notes.Any())
             {
-                TempData["ErrorMessage"] = "Aucune note à publier pour ce groupe.";
+                TempData["ErrorMessage"] = "Aucune note à publier.";
                 return RedirectToAction(nameof(ConsultGrades), new { groupId, coursId });
             }
 
-            // 2. Passer tout le monde à "IsPublished = true"
             foreach (var note in notes)
             {
                 note.IsPublished = true;
@@ -391,7 +536,7 @@ namespace Project.Controllers // Assurez-vous que le namespace est correct
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Les notes ont été publiées et sont maintenant visibles par les étudiants.";
+            TempData["SuccessMessage"] = "Notes publiées.";
             return RedirectToAction(nameof(ConsultGrades), new { groupId, coursId });
         }
     }

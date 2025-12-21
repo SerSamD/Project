@@ -2,7 +2,8 @@
 
 @{
     ViewData["Title"] = "Créer un Nouvel Utilisateur";
-    var roles = ViewBag.Roles as List<string>;
+    // ✅ SÉCURITÉ : Empêche le plantage si la liste est vide
+    var roles = ViewBag.Roles as List<string> ?? new List<string>();
 }
 
 <div class="container mt-4">
@@ -13,13 +14,11 @@
         <div class="col-md-6">
             <form asp-action="CreateUser" method="post">
                 @Html.AntiForgeryToken()
-
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                <!-- ROLE -->
                 <div class="mb-3">
-                    <label asp-for="Role" class="form-label"></label>
-                    <select asp-for="Role" class="form-select">
+                    <label asp-for="Role" class="form-label fw-bold">Rôle</label>
+                    <select asp-for="Role" class="form-select" required>
                         <option value="">-- Choisir un rôle --</option>
                         @foreach (var role in roles)
                         {
@@ -29,50 +28,45 @@
                     <span asp-validation-for="Role" class="text-danger"></span>
                 </div>
 
-                <!-- NOM UTILISATEUR -->
                 <div class="mb-3">
-                    <label asp-for="NomUtilisateur" class="form-label"></label>
+                    <label asp-for="NomUtilisateur" class="form-label fw-bold">Identifiant (Login)</label>
                     <input asp-for="NomUtilisateur" class="form-control" />
                     <span asp-validation-for="NomUtilisateur" class="text-danger"></span>
                 </div>
 
-                <!-- MOT DE PASSE -->
                 <div class="mb-3">
-                    <label asp-for="MotDePasse" class="form-label"></label>
-                    <input asp-for="MotDePasse" class="form-control" />
+                    <label asp-for="MotDePasse" class="form-label fw-bold">Mot de Passe</label>
+                    <input asp-for="MotDePasse" class="form-control" type="password" />
                     <span asp-validation-for="MotDePasse" class="text-danger"></span>
                 </div>
 
-                <!-- ✅ CONFIRMATION MOT DE PASSE (CORRECTION) -->
                 <div class="mb-3">
-                    <label asp-for="ConfirmMotDePasse" class="form-label"></label>
-                    <input asp-for="ConfirmMotDePasse" class="form-control" />
+                    <label asp-for="ConfirmMotDePasse" class="form-label fw-bold">Confirmer le Mot de Passe</label>
+                    <input asp-for="ConfirmMotDePasse" class="form-control" type="password" />
                     <span asp-validation-for="ConfirmMotDePasse" class="text-danger"></span>
                 </div>
 
-                <!-- PRENOM / NOM -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Prenom" class="form-label"></label>
+                        <label asp-for="Prenom" class="form-label fw-bold">Prénom</label>
                         <input asp-for="Prenom" class="form-control" />
                         <span asp-validation-for="Prenom" class="text-danger"></span>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Nom" class="form-label"></label>
+                        <label asp-for="Nom" class="form-label fw-bold">Nom</label>
                         <input asp-for="Nom" class="form-control" />
                         <span asp-validation-for="Nom" class="text-danger"></span>
                     </div>
                 </div>
 
-                <!-- EMAIL -->
                 <div class="mb-3">
-                    <label asp-for="Email" class="form-label"></label>
-                    <input asp-for="Email" class="form-control" />
+                    <label asp-for="Email" class="form-label fw-bold">Email</label>
+                    <input asp-for="Email" class="form-control" type="email" />
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" class="btn btn-primary w-100 py-2">
                         Créer le Compte
                     </button>
                 </div>
@@ -81,7 +75,7 @@
     </div>
 
     <div class="mt-4">
-        <a asp-action="Index">Retour au Tableau de Bord Admin</a>
+        <a asp-action="ActiveUsers" class="btn btn-secondary">Retour à la liste</a>
     </div>
 </div>
 
