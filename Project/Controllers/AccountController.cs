@@ -60,7 +60,8 @@ namespace Project.Controllers
                 var utilisateur = await _context.Utilisateurs.FirstOrDefaultAsync(u => u.NomUtilisateur == model.NomUtilisateur);
                 string submittedPasswordHash;
 
-                // Logique de hachage temporaire pour l'Admin seedé (si Id=1 et MDP non haché)
+                // Logique de hachage temporaire pour l'Admin seedé (si Id=1 et MDP non haché)System.InvalidOperationException: 'An exception has been raised that is likely due to a transient failure. Consider enabling transient error resiliency by adding 'EnableRetryOnFailure()' to the 'UseMySql' call.'
+
                 if (utilisateur != null && utilisateur.Id == 1 && utilisateur.MotDePasseHash == "admin123")
                 {
                     submittedPasswordHash = "admin123";

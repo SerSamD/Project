@@ -1,0 +1,299 @@
+/* ==========================================
+   LOGIN PAGE - DESIGN SPECTACULAIRE AVEC BACKGROUND
+   ========================================== */
+.login-page-wrapper {
+  position: relative;
+  min-height: 100vh;
+  background: 
+    linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
+    url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80') center/cover no-repeat;
+  overflow: hidden;
+}
+
+.login-background-overlay {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.3) 0%, transparent 50%);
+  animation: pulseOverlay 8s ease-in-out infinite;
+}
+
+@keyframes pulseOverlay {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.login-card-wrapper {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(20px);
+  animation: slideInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInScale {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Left Side - Image avec étudiants */
+.login-image-side {
+  position: relative;
+  background: 
+    linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%),
+    url('https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;
+  padding: 3rem 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  min-height: 600px;
+  overflow: hidden;
+}
+
+.login-image-side::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+  radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+  animation: moveGradient 10s ease infinite;
+}
+
+@keyframes moveGradient {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(20px, 20px) scale(1.1);
+  }
+}
+
+.login-image-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.login-brand {
+  animation: fadeInDown 0.8s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-brand i {
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+  line-height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.login-brand h2 {
+  font-size: 2rem !important;
+  font-weight: 800 !important;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.login-brand p {
+  font-size: 1.125rem;
+  opacity: 0.95;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.login-features {
+  text-align: left;
+  animation: fadeInUp 1s ease 0.3s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 0.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feature-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateX(10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.feature-item i {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.feature-item span {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Right Side - Login Form */
+.login-form-side {
+  padding: 3rem 2.5rem;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-form-content {
+  width: 100%;
+  max-width: 400px;
+  animation: fadeIn 0.8s ease 0.3s both;
+}
+
+@keyframes fadeIn {
+  from {
+opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.login-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2rem;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+  animation: pulseIcon 2s ease-in-out infinite;
+}
+
+@keyframes pulseIcon {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+  }
+}
+
+.login-form-content h2 {
+  color: #2d3748 !important;
+  font-size: 2rem !important;
+  font-weight: 800 !important;
+}
+
+.login-form-content .form-label {
+  font-weight: 600 !important;
+  color: #2d3748 !important;
+  margin-bottom: 0.5rem !important;
+  display: flex;
+  align-items: center;
+}
+
+.login-form-content .form-label i {
+  opacity: 0.7;
+}
+
+.login-form-content .form-control {
+  border-radius: 1rem !important;
+  border: 2px solid #e2e8f0 !important;
+  padding: 0.875rem 1.125rem !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background: #f5f7fa !important;
+}
+
+.login-form-content .form-control:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 0.3rem rgba(102, 126, 234, 0.15) !important;
+  background: white !important;
+  transform: translateY(-2px) !important;
+}
+
+.login-form-content .btn-primary {
+  border-radius: 1rem !important;
+  font-weight: 700 !important;
+font-size: 1rem !important;
+  letter-spacing: 0.02em !important;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+}
+
+.login-form-content .btn-primary:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6) !important;
+}
+
+/* Login Page Responsive */
+@media (max-width: 768px) {
+  .login-image-side {
+    display: none;
+  }
+  
+  .login-page-wrapper {
+    padding: 1rem;
+  }
+  
+  .login-form-side {
+    padding: 2rem 1.5rem;
+  }
+  
+  .login-card-wrapper {
+    margin: 1rem;
+  }
+}

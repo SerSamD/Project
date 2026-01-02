@@ -2,54 +2,96 @@
 
 @{
     ViewData["Title"] = "Connexion";
-    Layout = "_Layout"; // Utilise le layout standard sans sidebar
+    Layout = "_Layout";
 }
 
-<div class="container">
-    <div class="container d-flex justify-content-center align-items-center min-vh-100">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-body p-5 text-center">
+@section Styles {
+ <link rel="stylesheet" href="~/css/login-page.css" />
+}
 
-                    <div class="mb-4">
-                        <div class="bg-primary text-white rounded-circle d-inline-flex p-3 mb-3">
-                            <i class="fas fa-right-to-bracket fa-2x"></i>
-                        </div>
-                        <h2 class="fw-bold">Connexion</h2>
-                        <p class="text-muted">
-                            Entrez vos identifiants pour accéder à la plateforme
-                        </p>
-                    </div>
+<div class="login-page-wrapper">
+    <div class="login-background-overlay"></div>
+    
+    <div class="container">
+        <div class="row min-vh-100 align-items-center justify-content-center">
+<div class="col-md-10 col-lg-9 col-xl-8">
+             <div class="row g-0 login-card-wrapper">
+           
+       <!-- Left Side - Image avec overlay -->
+           <div class="col-md-6 login-image-side">
+          <div class="login-image-content">
+           <div class="login-brand mb-4">
+         <i class="fas fa-graduation-cap fa-3x mb-3"></i>
+        <h2 class="fw-bold">Plateforme Éducative</h2>
+             <p class="lead">Votre espace d'apprentissage digital</p>
+     </div>
+  <div class="login-features mt-5">
+      <div class="feature-item">
+       <i class="fas fa-check-circle"></i>
+       <span>Accès à vos cours en ligne</span>
+             </div>
+          <div class="feature-item">
+         <i class="fas fa-check-circle"></i>
+             <span>Suivi de vos notes en temps réel</span>
+        </div>
+              <div class="feature-item">
+       <i class="fas fa-check-circle"></i>
+      <span>Communication avec vos enseignants</span>
+            </div>
+                  </div>
+        </div>
+          </div>
 
-                    <form asp-action="Login" method="post">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger text-start" role="alert"></div>
-                        <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+  <!-- Right Side - Login Form -->
+<div class="col-md-6 login-form-side">
+       <div class="login-form-content">
+  <div class="text-center mb-4">
+           <div class="login-icon-wrapper">
+  <i class="fas fa-user-lock"></i>
+       </div>
+           <h2 class="fw-bold mt-3">Bienvenue !</h2>
+   <p class="text-muted">
+                 Connectez-vous pour accéder à votre espace
+      </p>
+       </div>
 
-                        <div class="form-floating mb-3 text-start">
-                            <input asp-for="NomUtilisateur" class="form-control" placeholder="Nom d'utilisateur" />
-                            <label asp-for="NomUtilisateur">Nom d'utilisateur</label>
-                            <span asp-validation-for="NomUtilisateur" class="text-danger small"></span>
-                        </div>
+             <form asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+     <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
 
-                        <div class="form-floating mb-4 text-start">
-                            <input asp-for="MotDePasse" type="password" class="form-control" placeholder="Mot de passe" />
-                            <label asp-for="MotDePasse">Mot de passe</label>
-                            <span asp-validation-for="MotDePasse" class="text-danger small"></span>
-                        </div>
+      <div class="mb-3">
+           <label asp-for="NomUtilisateur" class="form-label">
+        <i class="fas fa-user me-2"></i>Nom d'utilisateur
+   </label>
+   <input asp-for="NomUtilisateur" class="form-control" placeholder="Entrez votre nom d'utilisateur" />
+   <span asp-validation-for="NomUtilisateur" class="text-danger small"></span>
+    </div>
 
-                        <button type="submit" class="btn btn-primary w-100 py-2 fs-5 fw-bold rounded-pill">
-                            Se connecter
-                        </button>
-                    </form>
+        <div class="mb-4">
+  <label asp-for="MotDePasse" class="form-label">
+  <i class="fas fa-lock me-2"></i>Mot de passe
+       </label>
+       <input asp-for="MotDePasse" type="password" class="form-control" placeholder="Entrez votre mot de passe" />
+          <span asp-validation-for="MotDePasse" class="text-danger small"></span>
+     </div>
 
-                    <div class="mt-4 text-muted">
-                        <span>Pas encore de compte ?</span>
-                        <a asp-action="Register" class="text-primary fw-bold text-decoration-none ms-1">
-                            Créer un compte
-                        </a>
-                    </div>
+     <button type="submit" class="btn btn-primary w-100 py-3 mb-3">
+                 <i class="fas fa-sign-in-alt me-2"></i>
+                  Se connecter
+     </button>
+    </form>
 
-                </div>
+   <div class="text-center mt-4 pt-3 border-top">
+ <p class="text-muted mb-0">
+            Pas encore de compte ?
+     <a asp-action="Register" class="text-decoration-none fw-bold">
+       Créer un compte
+    </a>
+     </p>
+         </div>
+     </div>
+            </div>
+        </div>
             </div>
         </div>
     </div>
@@ -57,6 +99,6 @@
 
 @section Scripts {
     @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+     await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }

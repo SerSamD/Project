@@ -2,86 +2,55 @@
     ViewData["Title"] = "Espace Surveillant";
 }
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-5">
-        <div>
-            <h2 class="fw-bold text-dark">Vue d'ensemble</h2>
-            <p class="text-muted mb-0">Bienvenue sur votre tableau de bord de gestion.</p>
+<div class="dashboard-page">
+    <div class="page-header fade-in-up">
+  <div>
+        <h1 class="page-title">Espace Surveillant</h1>
+        <p class="page-subtitle">
+      Bienvenue sur votre tableau de bord de gestion scolaire
+ </p>
         </div>
+ </div>
+
+    <div class="action-cards-grid fade-in-up">
+  <a asp-controller="Surveillant" asp-action="ManageGroups" class="action-card">
+            <div class="action-card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+  <i class="fas fa-users-rectangle"></i>
     </div>
+       <h3 class="action-card-title">Mes Groupes</h3>
+            <p class="action-card-description">
+       Créez et gérez vos groupes d'étudiants, visualisez la liste complète
+     </p>
+        </a>
 
-    <div class="row g-4 row-cols-1 row-cols-md-2 row-cols-xl-4 justify-content-center">
+   <a asp-controller="Surveillant" asp-action="AssignStudents" class="action-card">
+    <div class="action-card-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+    <i class="fas fa-user-plus"></i>
+   </div>
+ <h3 class="action-card-title">Inscriptions</h3>
+   <p class="action-card-description">
+       Assignez les nouveaux étudiants inscrits dans vos différents groupes
+ </p>
+ </a>
 
-        <div class="col">
-            <div class="card shadow border-0 h-100 text-center hover-card">
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="bg-light rounded-3 d-inline-flex p-3 mb-3 align-self-center text-primary">
-                        <i class="fas fa-users fa-3x"></i>
-                    </div>
-                    <h5 class="fw-bold">Mes Groupes</h5>
-                    <p class="text-muted small">Créez des groupes et visualisez la liste des étudiants.</p>
-                    <a asp-controller="Surveillant" asp-action="ManageGroups" class="btn btn-primary w-100 rounded-pill mt-auto">
-                        Gérer
-                    </a>
-                </div>
-            </div>
-        </div>
+   <a asp-controller="Surveillant" asp-action="ManageSchedule" class="action-card">
+     <div class="action-card-icon" style="background: linear-gradient(135deg, #ffa502 0%, #ffb744 100%);">
+     <i class="fas fa-calendar-days"></i>
+     </div>
+      <h3 class="action-card-title">Planning</h3>
+   <p class="action-card-description">
+    Gérez les emplois du temps, ajoutez des cours et organisez les horaires
+            </p>
+        </a>
 
-        <div class="col">
-            <div class="card shadow border-0 h-100 text-center hover-card">
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="bg-light rounded-3 d-inline-flex p-3 mb-3 align-self-center text-success">
-                        <i class="fas fa-user-plus fa-3x"></i>
-                    </div>
-                    <h5 class="fw-bold">Inscriptions</h5>
-                    <p class="text-muted small">Assignez les nouveaux étudiants inscrits à vos groupes.</p>
-                    <a asp-controller="Surveillant" asp-action="AssignStudents" class="btn btn-success w-100 rounded-pill mt-auto">
-                        Assigner
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col">
-            <div class="card shadow border-0 h-100 text-center hover-card">
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="bg-light rounded-3 d-inline-flex p-3 mb-3 align-self-center text-warning">
-                        <i class="fas fa-calendar-alt fa-3x"></i>
-                    </div>
-                    <h5 class="fw-bold">Planning</h5>
-                    <p class="text-muted small">Gérez les emplois du temps et ajoutez des cours.</p>
-                    <a asp-controller="Surveillant" asp-action="ManageSchedule" class="btn btn-warning w-100 rounded-pill mt-auto text-dark">
-                        Planifier
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col">
-            <div class="card shadow border-0 h-100 text-center hover-card">
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="bg-light rounded-3 d-inline-flex p-3 mb-3 align-self-center text-info">
-                        <i class="fas fa-clipboard-check fa-3x"></i>
-                    </div>
-                    <h5 class="fw-bold">Notes & Résultats</h5>
-                    <p class="text-muted small">Validez et publiez les notes saisies par les enseignants.</p>
-                    <a asp-controller="Surveillant" asp-action="ConsultGrades" class="btn btn-info w-100 rounded-pill mt-auto text-white">
-                        Publier
-                    </a>
-                </div>
-            </div>
-        </div>
-
+        <a asp-controller="Surveillant" asp-action="ConsultGrades" class="action-card">
+       <div class="action-card-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+  <i class="fas fa-clipboard-check"></i>
+     </div>
+  <h3 class="action-card-title">Publication Notes</h3>
+            <p class="action-card-description">
+    Validez et publiez les notes saisies par les enseignants aux étudiants
+    </p>
+        </a>
     </div>
 </div>
-
-<style>
-    .hover-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-        .hover-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-        }
-</style>
