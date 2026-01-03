@@ -142,8 +142,5 @@ https://localhost:7000
 
 ⚠️ Il est fortement recommandé de changer le mot de passe administrateur après la première connexion.
 
-```
-
----
 
 
