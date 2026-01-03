@@ -99,11 +99,7 @@ L’application permet de gérer :
 ```bash
 git clone https://github.com/SerSamD/Project.git
 cd Project
-Voici **la suite complète**, prête à **copier–coller dans ton README.md**, juste après `cd Project` 👇
 
----
-
-````md
 2. Restaurer les dépendances
 ```bash
 dotnet restore
