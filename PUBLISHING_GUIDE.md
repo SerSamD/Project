@@ -45,10 +45,10 @@ Si vous souhaitez utiliser le repository actuel :
    git pull origin main
    ```
 
-2. **Fusionnez la branche actuelle dans main**
+2. **Fusionnez votre branche de développement dans main**
    ```bash
    git checkout main
-   git merge copilot/create-new-repo-for-project
+   git merge votre-branche-de-developpement
    git push origin main
    ```
 
