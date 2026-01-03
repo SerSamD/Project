@@ -99,6 +99,7 @@ L’application permet de gérer :
 ```bash
 git clone https://github.com/SerSamD/Project.git
 cd Project
+````
 
 2. Restaurer les dépendances
 ```bash
