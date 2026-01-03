@@ -99,3 +99,61 @@ L’application permet de gérer :
 ```bash
 git clone https://github.com/SerSamD/Project.git
 cd Project
+Voici **la suite complète**, prête à **copier–coller dans ton README.md**, juste après `cd Project` 👇
+
+---
+
+````md
+2. Restaurer les dépendances
+```bash
+dotnet restore
+````
+
+3. Configurer la base de données
+   Modifier le fichier `appsettings.json` avec vos informations MySQL :
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=schooldb;User=root;Password=YOUR_PASSWORD;"
+  }
+}
+```
+
+4. Créer la base de données et appliquer les migrations
+
+```bash
+dotnet ef database update
+```
+
+5. Lancer l’application
+
+```bash
+dotnet run
+```
+
+6. Accéder à l’application dans le navigateur
+
+```
+https://localhost:7000
+```
+
+7. Connexion avec le compte administrateur par défaut
+
+* Username : admin
+* Password : admin123
+
+⚠️ Il est fortement recommandé de changer le mot de passe administrateur après la première connexion.
+
+```
+
+---
+
+Si tu veux, je peux aussi :
+- ajouter une **section “Déploiement (IIS / Docker)”**
+- ajouter **MySQL + EF Core troubleshooting**
+- rendre cette partie **plus courte** pour un README public
+
+Dis-moi 👍
+```
+
