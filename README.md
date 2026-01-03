@@ -146,11 +146,4 @@ https://localhost:7000
 
 ---
 
-Si tu veux, je peux aussi :
-- ajouter une **section “Déploiement (IIS / Docker)”**
-- ajouter **MySQL + EF Core troubleshooting**
-- rendre cette partie **plus courte** pour un README public
-
-Dis-moi 👍
-```
 
